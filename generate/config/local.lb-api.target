@@ -1,0 +1,24 @@
+{
+    "target":{
+            "kind":"repo-source",
+            "umbrella":"01-Generate",
+            "branch":"#01.init",
+            "repo":"lb-Generate",
+            "folders": [{"name":"lb-api/one_db", "type":"db"},
+                    {"name":"lb-api/hapi-api","type":"db_api"},
+                    {"name":"sql","type":"scripts"}]
+    },
+    "database": {
+        "kind":"postgres",
+        "name":"one_db",
+        "schema":["api_0_0_1","base_0_0_1","public"],
+        "env": [
+            {"key": "POSTGRES_DB","value": "aad_db"},
+            {"key": "POSTGRES_USER","value": "postgres"},
+            {"key": "POSTGRES_PASSWORD","value": "mysecretdatabasepassword"},
+            {"key": "POSTGRES_JWT_SECRET","value": "PASSWORDmustBEATLEAST32CHARSLONGLONG"},
+            {"key": "POSTGRES_API_PASSWORD","value": "guestauthenticatorsecretdatabasepassword"},
+            {"key": "POSTGRES_JWT_CLAIMS","value": {"aud":"lyttlebit-api", "iss":"lyttlebit", "sub":"client-api", "user":"guest", "scope":"api_guest", "key":"0"}}
+        ]
+    }
+}

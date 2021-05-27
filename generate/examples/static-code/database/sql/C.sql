@@ -1,0 +1,2 @@
+-- Hi, I am a non-static code file C
+-- I will be ignored by init_db.py script
