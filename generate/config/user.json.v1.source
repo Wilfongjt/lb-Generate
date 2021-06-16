@@ -1,0 +1,263 @@
+{
+    "source": {
+            "kind":"repo-source",
+            "umbrella":"01-Generate",
+            "branch":"#01.init",
+            "repo":"lb-Generate",
+            "folders": [{"name":"lb-api/one_db", "type":"db"},
+                    {"name":"lb-api/hapi-api","type":"db_api"},
+                    {"name":"sql","type":"scripts"}]
+    },
+    "user": {
+        "kind":"api-definition",
+        "prefix":"24",
+        "name": "user",
+        "schema": "api_0_0_1",
+        "chelate": {
+            "pk": "username",
+            "sk": "const#USER",
+            "tk": "guid",
+            "form": {
+                "username": {
+                    "type": "email",
+                    "input": "CruD",
+                    "output": "R"
+                },
+                "password": {
+                    "type": "password",
+                    "input": "Cu",
+                    "output": false
+                },
+                "displayname": {
+                    "type": "TEXT",
+                    "input": "cu",
+                    "output": "R"
+                }
+            },
+            "active": {
+                "default": true
+            },
+            "created": {
+                "default": "NOW()"
+            },
+            "updated": {
+                "default": "NOW()"
+            },
+            "owner": {
+                "default": "current_setting('request.jwt.claim.key')"
+            }
+        },
+        "methods": {
+            "POST": {
+                "headers": {
+                    "authorization": "token",
+                    "test": "testForm"
+                },
+                "parameters": {
+                    "token": "TEXT",
+                    "form": "JSON"
+                },
+                "privileges": ["api_guest"]
+            },
+            "GET": {
+                "headers": {
+                    "authorization": "token",
+                    "test": "testForm"
+                },
+                "parameters": {
+                    "token": "TEXT",
+                    "criteria": "JSON",
+                    "options": "JSON"
+                },
+                "privileges": []
+            },
+            "PUT": {
+                "headers": {
+                    "authorization": "token",
+                    "test": "testForm"
+                },
+                "parameters": {
+                    "token": "TEXT",
+                    "pk": "TEXT",
+                    "form": "JSON"
+                },
+                "privileges": []
+            },
+            "DELETE": {
+                "headers": {
+                    "authorization": "token",
+                    "test": "testForm"
+                },
+                "parameters": {
+                    "token": "TEXT",
+                    "pk": "TEXT"
+                },
+                "privileges": []
+            }
+        },
+        "type": "const#USER",
+        "dep-roles": {
+            "api_guest": {
+                "description":["Guest cannot POST new user",
+                               "Guest cannot GET user(s)",
+                               "Guest cannot PUT changes into user",
+                               "Guest cannot DELETE a user"],
+                "privileges": "C",
+                "token": "Gk",
+                "execute":[]
+            },
+            "api_user": {
+                "description":["User cannot POST another user.",
+                               "User can only GET their own user info.",
+                               "User can only PUT changes into their own user info",
+                               "User can only DELETE their own user info"],
+                "privileges": "crud",
+                "token": "UK",
+                "execute":["GET","PUT","DELETE"]
+            },
+            "api_admin": {
+                "description":["Admin can POST new user",
+                               "Admin can GET user(s)",
+                               "Admin can DELETE any user",
+                               "Admin cannot PUT any changes in a user"],
+                "privileges": "r",
+                "token": "AK",
+                "execute":["POST","GET","DELETE"]
+            }
+        },
+        "runAsRole": "api_guest",
+        "tokenRole": "api_user",
+        "passwordHashOn": "password"
+    },
+    "signin": {
+        "kind":"api-static",
+        "prefix":"24",
+        "name": "signin",
+        "schema": "api_0_0_1",
+        "chelate": {
+            "pk": "username",
+            "sk": "const#USER",
+            "tk": "guid",
+            "form": {
+                "username": {
+                    "type": "email",
+                    "input": "CruD",
+                    "output": "R"
+                },
+                "password": {
+                    "type": "password",
+                    "input": "Cu",
+                    "output": false
+                }
+            },
+            "active": {
+                "default": true
+            },
+            "created": {
+                "default": "NOW()"
+            },
+            "updated": {
+                "default": "NOW()"
+            },
+            "owner": {
+                "default": "current_setting('request.jwt.claim.key')"
+            }
+        },
+        "methods": {
+            "GET": {
+                "headers": {
+                    "authorization": "token",
+                    "test": "testForm"
+                },
+                "parameters": {
+                    "token": "TEXT",
+                    "criteria": "JSON"
+                },
+                "privileges": []
+            }
+        },
+        "type": "const#USER",
+        "dep-roles": {
+            "api_guest": {
+                "description":["Guest cannot POST new user",
+                               "Guest cannot GET user(s)",
+                               "Guest cannot PUT changes into user",
+                               "Guest cannot DELETE a user"],
+                "privileges": "C",
+                "token": "Gk",
+                "execute":[]
+            }
+        },
+        "runAsRole": "api_guest",
+        "tokenRole": "api_user",
+        "passwordHashOn": "password"
+    },
+    "signup": {
+        "kind":"api-definition",
+        "prefix":"24",
+        "name": "signup",
+        "schema": "api_0_0_1",
+        "chelate": {
+            "pk": "username",
+            "sk": "const#USER",
+            "tk": "guid",
+            "form": {
+                "username": {
+                    "type": "email",
+                    "input": "C",
+                    "output": "R"
+                },
+                "password": {
+                    "type": "password",
+                    "input": "C",
+                    "output": false
+                },
+                "displayname": {
+                    "type": "TEXT",
+                    "input": "c",
+                    "output": "R"
+                }
+            },
+            "active": {
+                "default": true
+            },
+            "created": {
+                "default": "NOW()"
+            },
+            "updated": {
+                "default": "NOW()"
+            },
+            "owner": {
+                "default": "current_setting('request.jwt.claim.key')"
+            }
+        },
+        "methods": {
+            "POST": {
+                "headers": {
+                    "authorization": "token",
+                    "test": "testForm"
+                },
+                "parameters": {
+                    "token": "TEXT",
+                    "form": "JSON"
+                },
+                "privileges": ["api_guest"]
+            }
+        },
+        "type": "const#USER",
+        "dep-roles": {
+            "api_guest": {
+                "description":["Guest cannot POST new user",
+                               "Guest cannot GET user(s)",
+                               "Guest cannot PUT changes into user",
+                               "Guest cannot DELETE a user"],
+                "privileges": "C",
+                "token": "Gk",
+                "execute":[]
+            }
+        },
+        "runAsRole": "api_guest",
+        "tokenRole": "api_user",
+        "passwordHashOn": "password"
+    }
+}

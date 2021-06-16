@@ -85,12 +85,60 @@
                 "roles": {
                     "api_user":{
                         "template":[
-                            "    -- no custom code"
+                            "    if _form ? 'pk' and _form ? 'sk' then",
+                            "        -- [Primary query {pk,sk}]",
+                            "        _form = format('{\"pk\":\"%s\", \"sk\":\"%s\"}',_form ->> 'pk',_form ->> 'sk')::JSONB;",
+                            "    elsif _form ? 'pk' and not(_form ? 'sk') then",
+                            "        -- [Primary query {pk,sk:*}]",
+                            "        _form = format('{\"pk\":\"%s\", \"sk\":\"%s\"}',_form ->> 'pk','*')::JSONB;",
+                            "     elsif _form ? 'sk' and _form ? 'tk' then",
+                            "        -- [Secondary query {sk,tk}]",
+                            "        _form = format('{\"sk\":\"%s\", \"tk\":\"%s\"}',_form ->> 'sk',_form ->> 'tk')::JSONB;",
+                            "     elsif _form ? 'sk' and not(_form ? 'tk') then",
+                            "        -- [Secondary query {sk,tk:*}]",
+                            "        _form = format('{\"sk\":\"%s\", \"tk\":\"%s\"}',_form ->> 'sk','*')::JSONB;",
+                            "     elsif _form ? 'xk' and _form ? 'yk' then",
+                            "        -- [Teriary query {tk,sk} aka {xk, yk}]",
+                            "        _form = format('{\"xk\":\"%s\", \"yk\":\"%s\"}',_form ->> 'xk',_form ->> 'yk')::JSONB;",
+                            "     elsif _form ? 'xk' and not(_form ? 'yk') then",
+                            "        -- [Teriary query {tk} aka {xk}]",
+                            "        _form = format('{\"xk\":\"%s\", \"yk\":\"%s\"}',_form ->> 'xk','*')::JSONB;",
+                            "     elsif _form ? 'yk' and _form ? 'zk' then",
+                            "        -- [Quaternary query {sk,pk} akd {yk,zk}",
+                            "        _form = format('{\"yk\":\"%s\", \"zk\":\"%s\"}',_form ->> 'yk',_form ->> 'zk')::JSONB;",
+                            "     elsif _form ? 'yk' and not(_form ? 'zk') then",
+                            "        -- [Quaternary query {yk}",
+                            "        _form = format('{\"yk\":\"%s\", \"zk\":\"%s\"}',_form ->> 'yk','*')::JSONB;",
+                            "     end if;"
                         ]
                     },
                     "api_admin":{
                         "template":[
-                            "    -- no custom code"
+                            "    if _form ? 'pk' and _form ? 'sk' then",
+                            "        -- [Primary query {pk,sk}]",
+                            "        _form = format('{\"pk\":\"%s\", \"sk\":\"%s\"}',_form ->> 'pk',_form ->> 'sk')::JSONB;",
+                            "    elsif _form ? 'pk' and not(_form ? 'sk') then",
+                            "        -- [Primary query {pk,sk:*}]",
+                            "        _form = format('{\"pk\":\"%s\", \"sk\":\"%s\"}',_form ->> 'pk','*')::JSONB;",
+                            "     elsif _form ? 'sk' and _form ? 'tk' then",
+                            "        -- [Secondary query {sk,tk}]",
+                            "        _form = format('{\"sk\":\"%s\", \"tk\":\"%s\"}',_form ->> 'sk',_form ->> 'tk')::JSONB;",
+                            "     elsif _form ? 'sk' and not(_form ? 'tk') then",
+                            "        -- [Secondary query {sk,tk:*}]",
+                            "        _form = format('{\"sk\":\"%s\", \"tk\":\"%s\"}',_form ->> 'sk','*')::JSONB;",
+                            "     elsif _form ? 'xk' and _form ? 'yk' then",
+                            "        -- [Teriary query {tk,sk} aka {xk, yk}]",
+                            "        _form = format('{\"xk\":\"%s\", \"yk\":\"%s\"}',_form ->> 'xk',_form ->> 'yk')::JSONB;",
+                            "     elsif _form ? 'xk' and not(_form ? 'yk') then",
+                            "        -- [Teriary query {tk} aka {xk}]",
+                            "        _form = format('{\"xk\":\"%s\", \"yk\":\"%s\"}',_form ->> 'xk','*')::JSONB;",
+                            "     elsif _form ? 'yk' and _form ? 'zk' then",
+                            "        -- [Quaternary query {sk,pk} akd {yk,zk}",
+                            "        _form = format('{\"yk\":\"%s\", \"zk\":\"%s\"}',_form ->> 'yk',_form ->> 'zk')::JSONB;",
+                            "     elsif _form ? 'yk' and not(_form ? 'zk') then",
+                            "        -- [Quaternary query {yk}",
+                            "        _form = format('{\"yk\":\"%s\", \"zk\":\"%s\"}',_form ->> 'yk','*')::JSONB;",
+                            "     end if;"
                         ]
                     }
                 }

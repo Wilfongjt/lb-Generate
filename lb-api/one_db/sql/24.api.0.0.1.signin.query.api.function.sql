@@ -128,6 +128,8 @@ CREATE OR REPLACE FUNCTION api_0_0_1.signin(guest_token TEXT,credentials JSON) R
       return '{"status":"400","msg":"Bad Request"}'::JSONB;
     end if;
 
+    --_credentials := _credentials || '{"scope":"api_user"}';
+
     _user_token := NULL;
 
     BEGIN

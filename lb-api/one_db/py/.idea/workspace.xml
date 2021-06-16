@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="df3b97a3-699e-466c-a142-2bce0a2e6ad4" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/DESIGN.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/DESIGN.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/lib/auth/test_token_payload.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/lib/auth/test_token_payload.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/lib/auth/token_payload.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/lib/auth/token_payload.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/lib/clients/db_client_config.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/lib/clients/db_client_config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/lib/environment/env_config.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/lib/environment/env_config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/lib/plugins/postgres/UPDATES.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/lib/plugins/postgres/UPDATES.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/lib/plugins/postgres/hapi_pg_pool_plugin.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/lib/plugins/postgres/hapi_pg_pool_plugin.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/lib/routes/auth/signin_route_post.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/lib/routes/auth/signin_route_post.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/lib/routes/auth/user_route_post.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/lib/routes/auth/user_route_post.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/lib/routes/auth0/signin_route_post.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/lib/routes/auth0/signin_route_post.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/lib/routes/auth0/user_route_post.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/lib/routes/auth0/user_route_post.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/lib/routes/examples/time_route.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/lib/routes/examples/time_route.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/lib/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/lib/server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/test/environment/env.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/test/environment/env.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../hapi-api/test/server/server.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/../../hapi-api/test/server/server.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../sql/00.db.sql" beforeDir="false" afterPath="$PROJECT_DIR$/../sql/00.db.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../sql/10.base.0.0.1.sql" beforeDir="false" afterPath="$PROJECT_DIR$/../sql/10.base.0.0.1.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../sql/20.api.0.0.1.sql" beforeDir="false" afterPath="$PROJECT_DIR$/../sql/20.api.0.0.1.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../sql/30.seed.06.sql" beforeDir="false" afterPath="$PROJECT_DIR$/../sql/30.seed.06.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../sql/90.test.0.0.1.sql" beforeDir="false" afterPath="$PROJECT_DIR$/../sql/90.test.0.0.1.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../sql/92.cleanup.04.sql" beforeDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="IgnoredFileRootStore">
+    <option name="generatedRoots">
+      <set>
+        <option value="$PROJECT_DIR$/.idea" />
+      </set>
+    </option>
+  </component>
+  <component name="ProjectId" id="1rCldEe8IU8G94VqHag6bGPZH13" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="/usr/local/bin/python3.6" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="df3b97a3-699e-466c-a142-2bce0a2e6ad4" name="Default Changelist" comment="" />
+      <created>1618488038128</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1618488038128</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

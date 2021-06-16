@@ -23,14 +23,14 @@ SET search_path TO base_0_0_1, base_0_0_1, public;
 -- insert
 --
 
-CREATE OR REPLACE FUNCTION base_0_0_1.insert(_chelate JSONB) RETURNS JSONB
+CREATE OR REPLACE FUNCTION base_0_0_1.insert(_chelate JSONB,key TEXT) RETURNS JSONB
 AS $$
   --declare _chelate JSONB;
   declare _form JSONB;
   declare _result record;
   declare _extra TEXT;
   --declare _scope TEXT; -- soft role
-  declare _owner TEXT; -- who is inserting this record
+  --declare key TEXT; -- who is inserting this record
 BEGIN
   -- [Function: Insert Chelate like {pk,sk,tk,form}, {pk,sk,form}, {sk,tk,form}, or {sk,form}]
   -- [Validate Chelate]
@@ -41,20 +41,21 @@ BEGIN
   BEGIN
       --_scope := COALESCE(current_setting('request.jwt.claim.scope','t'), 'guest');
       -- [Add owner to chelate]
-      -- _owner := COALESCE(current_setting('request.jwt.claim.key','t'), current_user);
+      -- key := COALESCE(current_setting('request.jwt.claim.key','t'), current_user);
       -- set_config('request.jwt.claim.key',guid); -- with a guid# prefix
-      -- _owner := COALESCE(current_setting('request.jwt.claim.key','t'), '0');
+      -- key := COALESCE(current_setting('request.jwt.claim.key','t'), '0');
       --raise notice 'insert request.jwt.claim.key %',current_setting('request.jwt.claim.key','t');
       -- [figure out who the owner is]
-      _owner := COALESCE(current_setting('request.jwt.claim.key','t'), '0');
+      --key := COALESCE(current_setting('request.jwt.claim.key','t'), '0');
+      key := COALESCE(key, '0');
 
-      --Raise Notice 'owner %', _owner;
+      --Raise Notice 'owner %', key;
 
       _form := (_chelate ->> 'form')::JSONB;
-      --_form := _form || format('{"owner":"%s"}',_owner)::JSONB;
+      --_form := _form || format('{"owner":"%s"}',key)::JSONB;
     	  -- insert
       -- !form
-      if _owner = '0' then
+      if key = '0' then
         -- [Insert requires an owner key value]
         return '{"status":"400", "msg":"Bad Request", "extra":"chelate is missing owner."}'::JSONB;
       end if;
@@ -68,7 +69,7 @@ BEGIN
         -- [Handle chelate with pk, sk and tk]
         _extra := 'A';
         insert into base_0_0_1.one (pk,sk,tk,form,owner)
-          values (lower(_chelate ->> 'pk'), (_chelate ->> 'sk'), (_chelate ->> 'tk'), _form, _owner)
+          values (lower(_chelate ->> 'pk'), (_chelate ->> 'sk'), (_chelate ->> 'tk'), _form, key)
           returning * into _result;
         --raise notice 'A insert form %',_form;
       -- pksk
@@ -76,7 +77,7 @@ BEGIN
         -- [Handle chelate with pk and sk]
         _extra := 'B';
         insert into base_0_0_1.one (pk,sk,form,owner)
-          values (lower(_chelate ->> 'pk'), (_chelate ->> 'sk') ,_form, _owner)
+          values (lower(_chelate ->> 'pk'), (_chelate ->> 'sk') ,_form, key)
           returning * into _result;
         --raise notice 'B insert form %',_form;
 
@@ -85,7 +86,7 @@ BEGIN
         -- [Handle chelate with sk and tk]
         _extra := 'C';
         insert into base_0_0_1.one (sk,tk,form,owner)
-          values ((_chelate ->> 'sk'), (_chelate ->> 'tk') ,_form, _owner)
+          values ((_chelate ->> 'sk'), (_chelate ->> 'tk') ,_form, key)
           returning * into _result;
         --raise notice 'C insert form %',_form;
 
@@ -96,7 +97,7 @@ BEGIN
         insert into base_0_0_1.one (sk,form,owner)
           values (
                   (_chelate ->> 'sk'),
-                  _form, _owner) returning * into _result;
+                  _form, key) returning * into _result;
         --raise notice 'D insert form %',_form;
 
       else
@@ -113,7 +114,7 @@ BEGIN
             return '{"status":"409", "msg":"Duplicate"}'::JSONB;
           when others then
             RAISE NOTICE 'Insert Beyond here there be dragons! %', sqlstate;
-            return format('{"status":"%s", "msg":"Unhandled","extra":"%s"}', sqlstate, _extra)::JSONB;
+            return format('{"status":"%s", "msg":"Unhandled","extra":"%s","owner":"%s","chelate":%s}', sqlstate, _extra,key,_chelate)::JSONB;
     END;
     -- [Return {status,msg,insertion}]
     --raise notice '[Remove the password from Insert response!]';
@@ -124,4 +125,4 @@ END;
 $$ LANGUAGE plpgsql;
 
 --grant EXECUTE on FUNCTION base_0_0_1.insert(JSONB) to api_guest;
-grant EXECUTE on FUNCTION base_0_0_1.insert(JSONB) to api_user;
+grant EXECUTE on FUNCTION base_0_0_1.insert(JSONB,TEXT) to api_user;

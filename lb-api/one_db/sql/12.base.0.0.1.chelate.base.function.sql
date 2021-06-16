@@ -82,7 +82,6 @@ BEGIN
 
     _rc := _rc || format('{"form":%s}',form::TEXT)::JSONB;
   -- [Return {pk,sk,tk,form:{key1:value, key2:value2,...}}]
-
   return _rc;
 
 END;

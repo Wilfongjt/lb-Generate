@@ -12,13 +12,28 @@ from lib.api_configuration import ApiConfiguration
 import tkinter as tk
 from tkinter import filedialog
 
-from lib.template import Template
-from lib.template_post import PostTemplate
-from lib.template_get import GetTemplate
-from lib.template_put import PutTemplate
-from lib.template_delete import DeleteTemplate
-
-
+'''
+    "parameters": {
+            "POST": {
+                "token": "TEXT",
+                "form": "JSON"
+            },
+            "GET": {
+                "token": "TEXT",
+                "criteria": "JSON",
+                "options": "JSON"
+            },
+            "PUT": {
+                "token": "TEXT",
+                "pk": "TEXT",
+                "form": "JSON"
+            },
+            "DELETE": {
+                "token": "TEXT",
+                "pk": "TEXT"
+            }
+        },
+'''
 ##########
 # Generate User
 ##########
@@ -80,8 +95,48 @@ if criteria ? 'displayname' then
                                                   
 '''
 
+#  "keys":'{"pk":"username","sk":"const#USER","tk":"*"}',
+'''
 
+moved to ./config/user.json
 
+definitions = {
+    "user_chelate": {
+        "pk": "username",
+        "sk": "const#USER",
+        "tk": "guid",
+        "form": {
+            "username": {"type": "email", "input": "CruD", "output": "R"},
+            "password": {"type": "password", "input": "Cu", "output": False},
+            "displayname": {"type": "TEXT", "input": "cu", "output": "R"}
+        },
+        "active": {"default": True},
+        "created": {"default": "NOW()"},
+        "updated": {"default": "NOW()"},
+        "owner": {"default": "current_setting('request.jwt.claim.key')"}
+    },
+    "user": {
+        "name": "user",
+        "schema": "api_0_0_1",
+        "chelate": "user_chelate",
+        "type": "const#USER",
+        "dep-roles": "roles",
+        "runAsRole": "api_guest",
+        "tokenRole": "api_user",
+        "param eters": {"POST": {"token": "TEXT", "form": "JSON"},
+                       "GET": {"token": "TEXT", "criteria": "JSON", "options": "JSON"},
+                       "PUT": {"token": "TEXT", "pk": "TEXT", "form": "JSON"},
+                       "DELETE": {"token": "TEXT", "pk": "TEXT"}},
+        "dep-roles": {"api_guest": {"privileges": "C", "token": "Gk"},
+                  "api_user": {"privileges": "RUD", "token": "UK"},
+                  "api_admin": {"privileges": "r", "token": "AK"}
+                  },
+        "passwordHashOn": "password"
+    }
+}
+'''
+
+#exit(0)
 '''
            _____ _____ 
      /\   |  __ \_   _|
@@ -92,7 +147,556 @@ if criteria ? 'displayname' then
 
 '''
 
+#f = [fld for fld in d["form"]]
+#print('f',f)
+'''
+class API_Configuration(ShallowDictionary):
+    def __init__(self, folder='', filename=''):
+        super().__init__(folder, filename)
 
+    def load(self,_definitions={}):
+        super().load(definitions)
+        self.makeGeneratedKeys()
+
+    def makeGeneratedKeys(self):
+        methods = ["POST", "GET", "PUT", "DELETE"]
+        for key in self:
+            print('API key', key)
+            if 'schema' in self:
+                print('schema')
+                for method in methods:
+                    print('method', method)
+        return self
+'''
+'''
+class API(dict):
+    def __init__(self, folder='.', filename='junk.json'):
+        self.folder = folder
+        self.filename = filename
+        # transform
+
+    def load(self,_definitions={}):
+        methods = ["POST","GET","PUT","DELETE"]
+        if _definitions == {}:
+            print('Definitions empty')
+        #    # [load definitions from file]
+        #    print('hi')
+        #    with open('path_to_file/person.json') as f:
+        #        _definitions = json.load(f)
+        # evaluate all top level keys
+        # convert param eters to funcPattern by POST, GET, PUT, DELETE
+        # overwrite the existing funcPatterns
+        for key in _definitions:
+            # Augment Definitions
+            cpy_definition = _definitions[key].copy()
+            # merge chelate with main api definition
+            # find a definition
+            if 'schema' in cpy_definition:
+                print('chelate', cpy_definition['chelate'])
+                chelate = _definitions[cpy_definition['chelate']]
+                cpy_definition['chelate'] = chelate
+                cpy_definition['funcPattern']={}
+                # add
+                for method in methods:
+                    print('method', method)
+                    self[key]=cpy_definition
+                    # functPattern
+                    name = cpy_definition['name']
+                    # ""
+                    # parame ters = ['{} {}'.format(param,definition['par ameters'][method][param]) for param in definition['par ameters'][method]]
+                    parame ters = ['{}'.format(cpy_definition['pa rameters'][method][param]) for param in cpy_definition['paramet ers'][method]]
+                    params = ', '.join(parame ters)
+                    print('params ', params)
+
+                    cpy_definition['funcPattern'][method] = '{}({})'.format(name, params)
+                    #definition['funcPattern'][method]= 'xxx'#'{}({})'.format(name, params)
+        return self
+'''
+class FunctionTemplate(list):
+    def __init__(self, method, apiDefinition):
+        # convert to Postgres API Script
+        # definition is a single function definition
+        self.method = method
+        self.definition = apiDefinition
+        #self.parameterList = ['{} {}'.format(param,self.definition['par ameters'][param]) for param in self.definition['pa rameters']]
+        self.parameterList = None
+        self.privileges=None
+        self.tokenClaims=None
+        # formatting
+        #self.warning()
+        self.nameFunction()
+        self.declareVariables()
+        self.begin()
+        self.switchToRole(self.definition['runAsRole'])
+        self.validateParameters()
+        #self.startDataAssembly()
+        #self.assembleDataHashPassword()
+        self.assembleData()
+        self.function()
+        self.end()
+        self.grantFunction()
+    '''
+    def getMethods(self, _type):
+        
+        {'DELETE': {} or "" or [],
+          'GET': {} or "" or [],
+          'POST': {} or "" or [],
+          'PUT': {} or "" or []'
+        }
+     
+        name = self.definition['name']
+        lst = {}
+        for m in self.definition['methods']:
+            lst[m] = {}
+            for p in self.definition['methods'][m]:
+                lst[m] = self.definition['methods'][m][_type]
+
+        return lst
+
+    def getParameterList(self):
+        # ["<value> <type>","<value> <type>",...]
+        print('getMethods',self.getMethods('parameters'))
+        print('getMethods ', self.getMethods('parameters')[self.method])
+
+        if not self.parameterList:
+            # ["<value> <type>","<value> <type>",...]
+
+
+            self.parameterList = ['{} {}'.format(param, self.getMethods('parameters')[self.method][param])
+                                    for param in self.getMethods('parameters')[self.method]]
+        return self.parameterList
+    '''
+    '''
+        def getParameterList(self):
+        # ["<value> <type>","<value> <type>",...]
+        if not self.parameterList:
+            # ["<value> <type>","<value> <type>",...]
+
+            self.parameterList = ['{} {}'.format(param, self.definition['parameters'][self.method][param])
+                                    for param in self.definition['parameters'][self.method]]
+        return self.parameterList
+    
+    '''
+    #def getTokenByRole(self):
+    #    if not self.tokenClaims:
+    #        self.tokenClaims = {r: self.definition['roles'][r]['token'] for r in self.definition['roles']}
+    #    return self.tokenClaims
+
+    def getPrivilegesByRole(self):
+        if not self.privileges:
+            self.privileges = {r: self.definition['roles'][r]['privileges'] for r in self.definition['roles']}
+        return self.privileges
+
+    def getKeys(self):
+        #keys = self.definition['keys']
+        c = self.definition['chelate']
+        rc = '{"pk":"%p","sk":"%s","tk":"%t"}'
+        if '#' not in c['pk']:
+            rc = rc.replace('%p',c['pk'])
+        else:
+            rc = rc.replace('%p','TBD')
+
+        if 'const#' in c['sk']:
+            rc = rc.replace('%s',c['sk'])
+        else:
+            rc = rc.replace('%s','TBD')
+
+        if 'guid' in c['tk']:
+            rc = rc.replace('%t','*')
+        else:
+            rc = rc.replace('%t','TBD')
+        return rc
+
+    #def warning(self):
+    #    filename = __file__.split('/')
+    #    filename = filename[len(filename)-1]
+    #    rc = '''
+    #    -- This function was generated using {}
+    #    '''.format(filename)
+    #    #self.append(rc)
+    #    return rc
+
+    def nameFunction(self):
+        #pprint(self.definition)
+        schema=self.definition['schema']
+        # param eters = ['{} {}'.format(param,self.definition['par ameters'][param]) for param in self.definition['pa rameters']]
+        name = self.definition['name']
+        name = '{}({})'.format(name, ','.join(self.getParameterList()))
+        result = 'CREATE OR REPLACE FUNCTION {}.{}  RETURNS JSONB AS $$'.format( schema, name)
+
+        self.append(result)
+        return self
+
+    def declareVariables(self):
+        rc = ''
+        if 'POST' in self.method:
+            rc = '    Declare _form JSONB; Declare result JSONB; Declare _chelate JSONB := \'{}\'::JSONB;Declare tmp TEXT;'
+        if 'GET' in self.method:
+            rc = '    Declare _criteria JSONB; Declare result JSONB;'
+        if 'PUT' in self.method:
+            rc = '    Declare _chelate JSONB := \'{}\'::JSONB; Declare _criteria JSONB := \'{}\'::JSONB; _form JSONB := \'{}\'::JSONB; Declare result JSONB;'
+        if 'DELETE' in self.method:
+            rc = '    Declare result JSONB; Declare _criteria JSONB := \'{}\'::JSONB;'
+
+        self.append(rc)
+
+        return self
+
+    def begin(self):
+        #titleComment = '-- [Function: {} {} given {}]'.format( self.definition['name'].title(), self.method, ','.join(self.parameterList))
+        titleComment = '-- [Function: {} {}]'.format( self.definition['name'].title(), self.method)
+
+        methodComment = ''
+
+
+        if self.method == 'DELETE':
+            methodComment = \
+            '''-- [Description: Remove a {} from the table]
+            -- [Parameters: {}]
+            -- [Delete by primary key]
+            -- [pk is <text-value> or guid#<value>'''\
+                .format(self.definition['name'],','.join(self.parameterList))
+        elif self.method == 'PUT':
+            methodComment = \
+            '''-- [Description: Change the values of a {} chelate]
+            -- [Parameters: {}]
+            -- [Update by primary key]
+            -- [pk is <text-value> or guid#<value>'''\
+                .format(self.definition['name'],','.join(self.parameterList))
+        elif self.method == 'POST':
+            methodComment = \
+            '''-- [Description: Store the original values of a {} chelate]
+            -- [Parameters: {}]
+            -- [pk is <text-value> or guid#<value>'''\
+                .format(self.definition['name'],','.join(self.parameterList))
+        elif self.method == 'GET':
+            methodComment = \
+            '''-- [Description: Find the values of a {} chelate]
+            -- [Parameters: {}]'''\
+                .format(self.definition['name'],','.join(self.parameterList))
+
+        rc = \
+        '''BEGIN
+          {}
+          {}'''.format(titleComment,methodComment)
+
+
+        #print('linify',rc.split('\n'))
+        # self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+        return self
+
+    def switchToRole(self, role):
+
+        rc = '''
+          -- [Switch to {} Role]
+          set role {}; '''.format(role, role)
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+        return self
+
+    def validateParameters(self):
+        #for param in self.definition['param eters']:
+
+        #for param in self.definition['parameters'][self.method]:
+        for param in self.getMethods('parameters')[self.method]:
+
+            if param == 'token':
+                self.validateToken()
+            elif param == 'form':
+                self.validateForm()
+            elif param == 'options':
+                self.validateOptions()
+            elif param == 'criteria':
+                self.validateCriteria()
+            elif param == 'pk':
+                self.validatePk()
+            else:
+                print('uk param', param)
+
+        return self
+
+    def validatePk(self):
+
+        rc = '''
+          -- [Validate pk parameter]
+          if pk is NULL then
+              RESET ROLE;
+              -- [Fail 400 when pk is NULL]
+              return '{"status":"400","msg":"Bad Request"}'::JSONB;
+          end if;'''
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+
+
+    def validateToken(self):
+        tokenRole = self.definition['tokenRole']
+        rc = '''
+          -- [Validate token parameter]
+          result := base_0_0_1.validate_token(token) ;
+          if result is NULL then
+            -- [Fail 403 When token is invalid]
+            RESET ROLE;
+            return format({},CURRENT_USER)::JSONB;
+          end if;'''.format('\'{"status":"403","msg":"Forbidden","extra":"Invalid token","user":"%s"}\'')
+
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+
+        scopeVerificationList = []
+        keyVerificationList =[]
+        #if self.method == 'POST':
+            #scopeVerificationList = ['not(result ->> \'scope\' = \'{}\')'.format(role) for role in
+            #                         self.getPrivilegesByRole() if 'C' in self.getPrivilegesByRole()[role].upper() ]
+            # make list of roles with permission to execute
+            # e.g., if not(result ->> 'scope' = 'api_guest') and not(result ->> 'scope' = 'api_guest') then
+
+        #elif self.method == 'GET':
+            #scopeVerificationList = ['not(result ->> \'scope\' = \'{}\')'.format(role) for role in
+            #                         self.getPrivilegesByRole() if 'R' in self.getPrivilegesByRole()[role].upper()]
+         #   scopeVerificationList = [ 'not(result ->> \'scope\' = \'{}\')'.format(role) for role in self.definition['roles'] if self.method in self.definition['roles'][role]['execute'] ]
+
+        #elif self.method == 'PUT':
+        #    scopeVerificationList = ['not(result ->> \'scope\' = \'{}\')'.format(role) for role in
+        #                             self.getPrivilegesByRole() if 'U' in self.getPrivilegesByRole()[role].upper()]
+
+        #elif self.method == 'DELETE':
+        #    scopeVerificationList = ['not(result ->> \'scope\' = \'{}\')'.format(role) for role in
+        #                             self.getPrivilegesByRole() if 'D' in self.getPrivilegesByRole()[role].upper()]
+
+        scopeVerificationList = [ 'not(result ->> \'scope\' = \'{}\')'.format(role) for role in self.definition['roles'] if self.method in self.definition['roles'][role]['execute'] ]
+
+        rc = '''
+          -- [Verify token has expected scope]
+          if {} then
+              RESET ROLE;
+              -- [Fail 401 when unexpected scope is detected]
+              return '{}'::JSONB;
+          end if; '''.format(' and '.join(scopeVerificationList), '{"status":"401","msg":"Unauthorized"}')
+
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+
+        if len(keyVerificationList):
+            rc = '''
+             -- [Verify token has expected key]
+             if {} then
+                  RESET ROLE;
+                  -- [Fail 401 when unexpected key is detected]
+                  return '{}'::JSONB;
+             end if;'''.format(' and '.join(keyVerificationList), '{"status":"401","msg":"Unauthorized"}')
+            #self.append(rc)
+            #self.extend(rc.split('\n'))
+            self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+        return self
+
+
+    def validateForm(self):
+        #method=self.definition['method']
+        perm = 'C'
+
+        if self.method == 'PUT':
+            perm = 'U'
+        form=self.definition['chelate']['form']
+        required = ['not(_form ? \'{}\')'.format(nm) for nm in form if perm in form[nm]['input']]
+        # optional = ['_form ? \'{}\' and not(\'{}\')'.format(nm, nm) for nm in form if 'c' in form[nm]['input']]
+
+        rc = \
+          '''
+                    -- [Validate form parameter] 
+          if form is NULL then
+              -- [Fail 400 when form is NULL]
+              RESET ROLE;
+              return '{"status":"400","msg":"Bad Request"}'::JSONB;
+          end if;    
+          
+          _form := form::JSONB; 
+          '''
+        self.extend([ln for ln in rc.split('\n') if ln.strip() != ''])
+        if len(required) > 0:
+
+            rc = \
+          '''          -- [Validate Requred form fields]
+          if {} then  
+              -- [Fail 400 when form is missing requrired field]
+              RESET ROLE;
+              return {}::JSONB;
+          end if;'''\
+            .format(
+                   ' or '.join(required),
+                   '\'{"status":"400","msg":"Bad Request"}\''
+                   )
+            #self.extend(rc.split('\n'))
+            self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+
+        else:
+            rc = \
+          '''          -- [Validate Requred form fields]
+          -- [No required {} form fields ]
+            '''.format(self.method)
+            #self.extend(rc.split('\n'))
+            self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+            rc = \
+          '''          -- [Validate optional form fields]
+          -- [No optional {} form fields]
+            '''.format(self.method)
+            #self.extend(rc.split('\n'))
+            self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+
+        return self
+    def hashPassword(self):
+        rc = '''
+        -- [Hash password when found]
+        if _form ? 'password' then
+            _form := _form || format('{"password": "%s"}',crypt(form ->> 'password', gen_salt('bf')) )::JSONB; 
+        end if;  
+        '''
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+
+    #def hashPassword(self):
+    #    if self.method == 'POST' or self.method == 'PUT':
+    #        rc = '''
+    #    -- [Hash Password x]
+    #    if (_chelate ->> 'form')::JSONB ? '%k' then
+    #            _form := (_chelate ->> 'form')::JSONB;
+    #            _form := _form || format('{"password": "%s"}',crypt(form ->> '%k', gen_salt('bf')) )::JSONB;
+    #            _chelate := _chelate || format('{"form": %s}',_form)::JSONB;
+    #    end if;'''
+    #        self.append(rc)
+
+    def validateOptions(self):
+        rc = '''
+          -- Validate Options'''
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+
+        return self
+
+    def validateCriteria(self):
+        rc = '''
+          -- Validate Criteria'''
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+
+
+    def startDataAssembly(self):
+        rc = '''
+          -- [Data Assembly]'''
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+        return self
+
+    def assembleDataHashPassword(self):
+        rc = '''
+          -- Hash Password is Off'''
+        if self.method == 'POST' or self.method == 'PUT':
+            rc = '''
+              -- [Hash Password is On]'''
+            #self.append(rc)
+            #self.extend(rc.split('\n'))
+
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+
+        return self
+
+    def assembleData(self):
+        rc = '''
+          -- [Assemble Data]'''
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+
+        return self
+
+    def function(self):
+        method=self.definition['method']
+        name= self.definition['name']
+
+        rc = '''
+          -- [API {} {} Function]
+          TBD
+          '''.format(method, name)
+
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+
+        return self
+
+    def end(self):
+        rc = '''
+          RESET ROLE;
+          -- [Return {status,msg,insertion}]
+          return result;    
+        END;
+        $$ LANGUAGE plpgsql;'''
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+
+        return self
+
+
+    def grantFunction(self):
+        # provides a statement of permissions
+        schema=self.definition['schema']
+        runAsRole=self.definition['runAsRole']
+        parameters = self.definition['funcPattern'][self.method]
+        '''
+        rc = 'grant EXECUTE on FUNCTION {}.{} to {};' \
+            .format(schema, self.definition['funcPattern'][self.method], runAsRole)
+
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+        '''
+        rc = 'grant EXECUTE on FUNCTION {}.{} ' \
+            .format(schema, self.definition['funcPattern'][self.method])
+
+
+        # METHOD
+        lst = ['{} to {}; '.format(rc, role) for role in self.definition['roles']
+            if 'execute' in self.definition['roles'][role] and self.method in self.definition['roles'][role]['execute']]
+
+        if len(lst) > 0:
+            #print('-- {}'.format(self.method))
+            #print(lst)
+            self.append('-- {}'.format(self.method))
+            self.extend(lst)
+
+
+
+
+
+        return self
+    '''
+        def grantFunction(self):
+        # provides a statement of permissions
+        schema=self.definition['schema']
+        runAsRole=self.definition['runAsRole']
+        
+        rc = 'grant EXECUTE on FUNCTION {}.{} to {};' \
+            .format(schema, self.definition['funcPattern'][self.method], runAsRole)
+
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+
+        return self
+    '''
+
+    def toString(self):
+        return '\n'.join(self)
 '''
   _____          _   
  |  __ \        | |  
@@ -104,17 +708,33 @@ if criteria ? 'displayname' then
                      
 
 '''
-class dep_PostTemplate(Template):
+class PostTemplate(FunctionTemplate):
     def __init__(self,definition):
         super().__init__('POST',definition)
 
-    def getCustomCodeTemplate(self, method_code):
-        lst = super().getCustomCodeTemplate()
-        lst.extend(self.assembleData())
+    '''
+    def getKeys(self):
+        #keys = self.definition['keys']
+        c = self.definition['chelate']
+        rc = '{"pk":"%p","sk":"%s","tk":"%t"}'
+        if '#' not in c['pk']:
+            rc = rc.replace('%p',c['pk'])
+        else:
+            rc = rc.replace('%p','TBD')
 
-        return lst
+        if 'const#' in c['sk']:
+            rc = rc.replace('%s',c['sk'])
+        else:
+            rc = rc.replace('%s','TBD')
 
-    def getInsert_(self, role, privileges):
+        if 'guid' in c['tk']:
+            rc = rc.replace('%t','*')
+        else:
+            rc = rc.replace('%t','TBD')
+
+        return rc
+    '''
+    def getInsert(self, role, privileges):
         rc = '''             
               -- [Chelate Data]
               _chelate := base_0_0_1.chelate(\'{}\'::JSONB, _form); -- chelate with keys on insert
@@ -127,40 +747,38 @@ class dep_PostTemplate(Template):
 
     def assembleData(self):
         rc = '''
-        -- [Assemble Data]
-        -- [Hash password when found]
-        if _form ? 'password' then
-            _form := _form || format('{"password": "%s"}',crypt(form ->> 'password', gen_salt('bf')) )::JSONB;
-        end if;
-        if CURRENT_USER = [[data-POST-role]] then
-        end if;
-        '''
-        '''
-        # skip blank lines
+        -- [Assemble Data]'''
+
         self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
         self.hashPassword()
+
         rc = '          '
         self.append('        -- user specific stuff')
+
         lst = ['if CURRENT_USER = \'{}\' then\n {} \n'
-                  .format(role, self.getInsert_(role, self.getPrivilegesByRole()[role]))
+                  .format(role, self.getInsert(role, self.getPrivilegesByRole()[role]))
                   for role in self.definition['roles']
                       if self.method in self.definition['roles'][role]['execute']]
+
         rc += '           els'.join(lst)
         rc += '\n          end if;'
-        '''
-        #self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
 
-        return rc.split('\n')
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
 
-    #def function(self):
-    #    name = self.definition['name']
-    #    rc = '''
+        return self
+
+    def function(self):
+        #method = self.definition['method']
+        name = self.definition['name']
+
+        rc = '''
     
-    #      -- [Insert {} Chelate]
-    #      result := base_0_0_1.insert(_chelate);'''.format(name)
-
-    #    self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
-    #    return self
+          -- [Insert {} Chelate]
+          result := base_0_0_1.insert(_chelate);'''.format(name)
+        #self.append(rc)
+        #self.extend(rc.split('\n'))
+        self.extend([ln for ln in rc.split('\n') if ln.strip() not in ''])
+        return self
 '''
    _____      _   
   / ____|    | |  
@@ -173,7 +791,7 @@ class dep_PostTemplate(Template):
 
 
 
-class dep_GetTemplate(Template):
+class GetTemplate(FunctionTemplate):
     def __init__(self,definition):
         super().__init__('GET',definition)
 
@@ -268,7 +886,7 @@ class dep_GetTemplate(Template):
                              
 '''
 
-class dep_DeleteTemplate(Template):
+class DeleteTemplate(FunctionTemplate):
     def __init__(self,definition):
         super().__init__('DELETE',definition)
 
@@ -347,7 +965,7 @@ class dep_DeleteTemplate(Template):
         |_|                        
 
 '''
-class dep_PutTemplate(Template):
+class PutTemplate(FunctionTemplate):
     def __init__(self,definition):
         super().__init__('PUT',definition)
 
@@ -448,6 +1066,15 @@ class dep_PutTemplate(Template):
                                        
                                        
 '''
+'''
+def warning():
+    filename = __file__.split('/')
+    filename = filename[len(filename)-1]
+    rc = '-- This function was generated using {}'.format(filename)
+    #self.append(rc)
+    return rc
+    #return rc.split('\n')
+'''
 
 def openApi(config_folder, file_type='source'):
     # [Method: openApiConfiguration]
@@ -510,7 +1137,7 @@ def openApiConfiguration(config_folder):
     return ApiConfiguration(config_folder, config_filename).load()
 '''
 def getEnvironment(environ):
-
+    #if 'repo-source' == environ['kind']:
     if 'repo-source' == environ['kind'] or 'repo-target' == environ['kind']:
 
         # [Configure GIT folders]
@@ -659,34 +1286,23 @@ def main():
         # [Generate API Script]
         pageList.append('-- POST')
         # [Generate POST Function]
-        pageList.extend(PostTemplate(apiName, folder='../templates', filename='post.sql.template') \
-            .apply(apiConfiguration))
-        #pageList.extend(PostTemplate(apiName, apiConfiguration))
-        #pageList.extend(PostTemplate(apiConfiguration[apiName]))
-
+        pageList.extend(PostTemplate(apiConfiguration[apiName]))
         pageList.append('-- GET')
         # [Generate GET Function]
         pprint(apiConfiguration[apiName])
-        pageList.extend(GetTemplate(apiName, folder='../templates', filename='get.sql.template')\
-            .apply(apiConfiguration))
-        #pageList.extend(GetTemplate(apiConfiguration[apiName]))
-
+        pageList.extend(GetTemplate(apiConfiguration[apiName]))
         pageList.append('-- DELETE')
         # [Generate DELETE Function]
-        pageList.extend(DeleteTemplate(apiName, folder='../templates', filename='delete.sql.template')\
-            .apply(apiConfiguration))
-
+        pageList.extend(DeleteTemplate(apiConfiguration[apiName]))
         pageList.append('-- PUT')
         # [Generate PUT Function]
-        pageList.extend(PutTemplate(apiName, folder='../templates', filename='put.sql.template')\
-            .apply(apiConfiguration))
+        pageList.extend(PutTemplate(apiConfiguration[apiName]))
 
         # [Assemble API (POST, GET, PUT, and Delete) Functions into single script]
         newDoc = Document(targetDev.getFolder('scripts'), apiScriptFilename).load(pageList)
-        #pprint(newDoc)
 
         changed = True
-        # [Dont overwrite existing scripts]
+        # [Dont overwrite exiting scripts]
         if Util().file_exists(targetDev.getFolder('scripts'),apiScriptFilename):
             # [Compare New Script to Old Script]
             oldDoc = Document(targetDev.getFolder('scripts'), apiScriptFilename).load()

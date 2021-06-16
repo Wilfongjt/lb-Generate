@@ -43,7 +43,7 @@ def openApiConfiguration(config_folder):
     return ApiConfiguration(config_folder, config_filename).load()
 '''
 def getEnvironment(environ):
-    if 'repo-source' == environ['kind']:
+    if 'repo-source' == environ['kind'] or 'repo-target' == environ['kind']:
         # [Configure GIT folders]
         #pprint(environ)
         dev = GitDevelopment(environ['umbrella'],
