@@ -1,0 +1,228 @@
+-- this template is designed to facilitate all the common code accross api GET calls
+-- pair template up with a custom class to add user specific code ... current-user-code
+-- an api definition is also required to provide customization
+-- A "[[data-schema]]" is api_0_0_1 {user:schema}
+-- B "[[data-name]]" is data-name
+-- C "[[data-methods-GET-parameters-token-name]]" is data-methods-GET-parameters-token-name
+-- D "[[data-methods-GET-parameters-form-name]]" is form data-methods-GET-parameters-form-name
+-- E "[[data-methods-GET-parameters-form-type]]" is data-methods-GET-parameters-form-type
+-- F ([[data-GET-scope-verification-condition]]) is data-GET-scope-verification-condition
+-- G ([[data-GET-form-required-field-condition]]) is data-GET-form-required-field-condition
+-- H "[[data-methods-GET-grant]]" is data-methods-GET-grant
+<script "id":"template">
+\c [[data-database-name]]
+
+SET search_path TO [[data-schema]], base_0_0_1, public;
+
+-- GET
+
+CREATE OR REPLACE FUNCTION [[data-schema]].[[data-name]](token TEXT, form JSON, options JSON) RETURNS JSONB AS $$
+    Declare _form JSONB;
+    Declare result JSONB;
+BEGIN
+          -- [Function: User GET]
+          -- [Description: Find the values of a user chelate]
+          -- [Parameters: token TEXT,form JSON,options JSON]
+
+          set role api_guest;
+
+          -- [A. Validate Token]
+          result := base_0_0_1.validate_token(token) ;
+          if result is NULL then
+            -- [A.1 Fail 403 When token is invalid]
+            RESET ROLE;
+            return format('{"status":"403","msg":"Forbidden","extra":"Invalid token","user":"%s"}',CURRENT_USER)::JSONB;
+          end if;
+
+          -- [B. Verify Parameters]
+          -- eg if not(result ->> 'scope' = 'api_admin') and not(result ->> 'scope' = 'api_guest') then
+          if [[data-methods-GET-scopeVerificationCondition]] then
+              RESET ROLE;
+              -- [B.1 Fail 401 when unexpected scope is detected]
+              return '{"status":"401","msg":"Unauthorized"}'::JSONB;
+          end if;
+
+          if form is NULL then
+              -- [B.2 Fail 400 when form is NULL]
+              RESET ROLE;
+              return '{"status":"400","msg":"Bad Request"}'::JSONB;
+          end if;
+
+          _form := form::JSONB;
+
+          if _form ? 'pk' and _form ? 'sk' then
+               -- [B.3Primary query {pk,sk}]
+               _form = format('{"pk":"%s", "sk":"%s"}',_form ->> 'pk',_form ->> 'sk')::JSONB;
+          elsif _form ? 'pk' and not(_form ? 'sk') then
+               -- [B.4 Primary query {pk,sk:*}]
+               _form = format('{"pk":"%s", "sk":"%s"}',_form ->> 'pk','*')::JSONB;
+          elsif _form ? 'sk' and _form ? 'tk' then
+               -- [B.5 Secondary query {sk,tk}]
+               _form = format('{"sk":"%s", "tk":"%s"}',_form ->> 'sk',_form ->> 'tk')::JSONB;
+          elsif _form ? 'sk' and not(_form ? 'tk') then
+               -- [B.6 Secondary query {sk,tk:*}]
+               _form = format('{"sk":"%s", "tk":"%s"}',_form ->> 'sk','*')::JSONB;
+          elsif _form ? 'xk' and _form ? 'yk' then
+               -- [B.7 Teriary query {tk,sk} aka {xk, yk}]
+               _form = format('{"xk":"%s", "yk":"%s"}',_form ->> 'xk',_form ->> 'yk')::JSONB;
+          elsif _form ? 'xk' and not(_form ? 'yk') then
+               -- [B.8 Teriary query {tk} aka {xk}]
+               _form = format('{"xk":"%s", "yk":"%s"}',_form ->> 'xk','*')::JSONB;
+          elsif _form ? 'yk' and _form ? 'zk' then
+               -- [B.9 Quaternary query {sk,pk} akd {yk,zk}
+               _form = format('{"yk":"%s", "zk":"%s"}',_form ->> 'yk',_form ->> 'zk')::JSONB;
+          elsif _form ? 'yk' and not(_form ? 'zk') then
+               -- [B.10 Quaternary query {yk}
+               _form = format('{"yk":"%s", "zk":"%s"}',_form ->> 'yk','*')::JSONB;
+          else
+              -- [B.11 Fail 400 when form is NULL]
+              RESET ROLE;
+              return '{"status":"400","msg":"Bad Request"}'::JSONB;
+          end if;
+
+          -- [C. Assemble Chelate Data]
+
+          [[data-methods-GET-customRoleCode]]
+
+          -- [D. Query Chelate]
+          result := base_0_0_1.query(_form);
+          RESET ROLE;
+          -- [Return {status,msg,selection}]
+          return result;
+END;
+$$ LANGUAGE plpgsql;
+-- GET
+-- e.g., grant EXECUTE on FUNCTION
+[[data-methods-GET-grant]]
+</script>
+
+<script "id":"before-code">
+# before GET template
+def before(data):
+    api_kinds ='api-definition api-static'
+    api_kinds ='api-definition'
+
+    api_names = [n for n in data if data[n]['kind'] in api_kinds]
+    METHODS = "methods"
+    method = 'GET'
+
+    for function_name in api_names:
+        #print('C1 ====== funcPattern', function_name)
+        ##########
+        # inject functionpattern into api-methods-GET-funcPattern
+        # (eg api-methods = {'GET': {"funcPattern":'user(TEXT,JSON))'}}
+        ##########
+        parameters = 'parameters'
+        params = ['{}'.format(y[1]['type']) for y in [x for x in data[function_name][METHODS][method][parameters].items()]]
+        params = ','.join(params)
+
+        data[function_name][METHODS][method]['funcPattern'] = '{}({})'.format(function_name, params)
+
+        #print('C2 ====== Move the Database')
+        ##########################
+        # inject "database" into api-database
+        ##########################
+        if 'database' not in data:
+            print('ERROR Database key not found.')
+            data[function_name]['database'] = {}
+            return
+        data[function_name]['database'] = data['database']
+
+        #print('C3 ====== Grant Execute ')
+        ###############################
+        # inject "grant" into api-methods-GET-grant
+        # add grant EXECUTE on FUNCTION <function-name>(<param-type, param-type>...) to <role>
+        ###############################
+        parameters = 'parameters'
+        grant = 'grant'
+        roles = 'roles'
+
+        if method in data[function_name][METHODS]:
+            # param-type, param-type
+            param_types = ['{}'.format(y[1]['type']) for y in
+                           [x for x in data[function_name][METHODS][method][parameters].items()]]
+            param_types = ','.join(param_types)
+            privileges = ['grant EXECUTE on FUNCTION [[data-schema]].{}({}) to {};'.format(function_name, param_types, p) for p in
+                          [x for x in data[function_name][METHODS][method][roles]]]
+            privileges = '\n'.join(privileges)
+            data[function_name][METHODS][method][grant] = '{}'.format(privileges)
+
+        #print('C4 ====== Scope')
+        ###############################
+        # inject "not('api_admin')...or" into scopeVerificationCondition
+        # eg not('api_admin')
+        ###############################
+        roles = 'roles'
+        privileges = ['not(result ->> \'scope\' = \'{}\')'.format(p) for p in [x for x in data[function_name][METHODS][method][roles]]]
+        privileges = ' and '.join(privileges)
+
+        data[function_name][METHODS][method]['scopeVerificationCondition'] = '{}'.format(privileges)
+
+        #print('C5 ====== Required')
+        ##############################
+        # inject required fields "'not(_form ? \'{}\')...or" into requiredFieldCondition
+        # eg requiredFieldCondition': "not(_form ? 'username') or not(_form ? 'password')
+        ###############################
+        o2m = {'C':"POST","R":"GET","U":"PUT","D":"DELETE"}
+        m2o = {"POST":"C","GET":"R","PUT":"U","DELETE":"D"}
+
+        operation =m2o[method]
+        required = ['not(_form ? \'{}\')'.format(r) for r in[fld[0] for fld in data[function_name]['chelate']['form'].items() if operation in fld[1]['operations']]]
+        required =  ' or '.join(required)
+
+        if len(required) == 0:
+            required='1=0'
+
+        data[function_name][METHODS][method]['requiredFieldCondition'] = '{}'.format(required)
+        print('X operation',operation)
+        print('X requiredFieldCondition',data[function_name][METHODS][method]['requiredFieldCondition'])
+
+        #print('C6 ====== Hashing')
+        ##########
+        # Generate Password Hashing code
+        # Turn password hashing on when passwordHashCode is <code>
+        # passwordHashCode: <code> or False
+        # passwordHashCode is False by default
+        # chelate operations set to 'C','c','U', or 'u'
+        #######
+        passwordHashCode=''
+        if 'passwordHash' not in data[function_name][METHODS][method]: # set default
+            data[function_name][METHODS][method]['passwordHash']=False
+
+        passwordHash=data[function_name][METHODS][method]['passwordHash']
+        print('passwordHash', passwordHash)
+        if passwordHash:
+            passwordHashField = [h[1]['name'] for h in data[function_name]['chelate']['form'].items()
+                                                 if h[1]['type']=='password'
+                                                 and ('C' in h[1]['operations'].upper()
+                                                      or 'U' in h[1]['operations'].upper())]
+            passwordHashField = ''.join(passwordHashField) or False
+
+            if passwordHashField:
+                passwordHashCode = '''-- [Password hashing]
+                if _form ? '%p' then
+                  _form := _form || format('{"%p": "%s"}',crypt(form ->> '%p', gen_salt('bf')) )::JSONB;
+                end if;
+                '''.replace('%p', passwordHashField)
+        data[function_name][METHODS][method]['passwordHashCode']=passwordHashCode or '-- [No Password Hashing]'
+
+        #print('C7 ====== Role Specific Code')
+        #################
+        # inject custom role code as methods-GET-customRoleCode
+        #################
+
+        roleList = []
+        for r in data[function_name]['methods'][method][roles]:
+            code = ['            {}'.format(c) for c in data[function_name]['methods'][method][roles][r]['template']]
+            code = '\n'.join(code)
+            roleList.append('if CURRENT_USER = \'{}\' then /* custom code */\n    {}\n'.format(r,code) )
+        roleList = '            els'.join(roleList) + '\n           end if;'
+        data[function_name]['methods'][method]['customRoleCode'] = roleList
+
+</script>
+<script "id":"after-code">
+
+def after(def_name):
+    print('GET after code TBD')
+
+</script>

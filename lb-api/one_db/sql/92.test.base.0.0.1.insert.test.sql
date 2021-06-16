@@ -32,20 +32,21 @@ BEGIN;
   SELECT has_function(
       'base_0_0_1',
       'insert',
-      ARRAY[ 'JSONB' ],
-      'Function Insert (_chelate JSONB) exists'
+      ARRAY[ 'JSONB','TEXT' ],
+      'Function Insert (_chelate JSONB, text) exists'
   );
 
   --  2
   SELECT is (
-    base_0_0_1.insert('{
+    (base_0_0_1.insert('{
       "sk":"const#TEST",
       "form":{"username":"insert1@user.com",
               "displayname":"J",
               "password":"a1A!aaaa"
             }
-      }'::JSONB)::JSONB ->> 'msg',
-      'OK'::TEXT,
+      }'::JSONB,
+      'insert1Owner')::JSONB - 'insertion'),
+      '{"msg": "OK", "status": "200"}'::JSONB,
       'insert sk form good 0_0_1'::TEXT
   );
 
@@ -58,22 +59,24 @@ BEGIN;
               "displayname":"J",
               "password":"a1A!aaaa"
             }
-      }'::JSONB)::JSONB ->> 'msg',
+      }'::JSONB,
+      'insert2Owner')::JSONB ->> 'msg',
       'OK'::TEXT,
       'insert pk sk form good 0_0_1'::TEXT
   );
 
   -- 4
   SELECT is (
-    base_0_0_1.insert('{
+    (base_0_0_1.insert('{
       "sk":"const#TEST",
       "tk":"username#insert22@user.com",
       "form":{"username":"insert22@user.com",
               "displayname":"J",
               "password":"a1A!aaaa"
             }
-      }'::JSONB)::JSONB ->> 'msg',
-      'OK'::TEXT,
+      }'::JSONB,
+      'insert22Owner')::JSONB - 'insertion'),
+      '{"msg": "OK", "status": "200"}'::JSONB,
       'insert pk sk form good 0_0_1'::TEXT
   );
   -- 5
@@ -85,7 +88,8 @@ BEGIN;
               "displayname":"J",
               "password":"a1A!aaaa"
             }
-      }'::JSONB)::JSONB ->> 'msg',
+      }'::JSONB,
+      'insert3Owner')::JSONB ->> 'msg',
       'OK'::TEXT,
       'insert sk tk form good  0_0_1'::TEXT
   );
@@ -99,7 +103,8 @@ BEGIN;
               "displayname":"J",
               "password":"a1A!aaaa"
             }
-      }'::JSONB)::JSONB ->> 'msg',
+      }'::JSONB,
+      'insert4Owner')::JSONB ->> 'msg',
       'OK'::TEXT,
       'insert pk sk tk form good  0_0_1'::TEXT
   );
@@ -113,7 +118,8 @@ BEGIN;
               "displayname":"J",
               "password":"a1A!aaaa"
             }
-      }'::JSONB)::JSONB ->> 'msg',
+      }'::JSONB,
+      'insert4Owner')::JSONB ->> 'msg',
       'Duplicate'::TEXT,
       'insert sk tk form, sk tk duplicte error  0_0_1'::TEXT
   );
@@ -124,7 +130,8 @@ BEGIN;
               "displayname":"J",
               "password":"a1A!aaaa"
             }
-      }'::JSONB)::JSONB ->> 'msg',
+      }'::JSONB,
+      'insertOwner')::JSONB ->> 'msg',
       'Bad Request'::TEXT,
       'insert missing keys form good  0_0_1'::TEXT
   );
@@ -138,7 +145,8 @@ BEGIN;
               "displayname":"J",
               "password":"a1A!aaaa"
             }
-      }'::JSONB)::JSONB ->> 'msg',
+      }'::JSONB,
+      'insert4Owner')::JSONB ->> 'msg',
       'Bad Request'::TEXT,
       'insert pk sk tk BADform   0_0_1'::TEXT
   );

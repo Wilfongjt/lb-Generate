@@ -18,11 +18,16 @@ SET search_path TO api_0_0_1, base_0_0_1, public;
 --\set guest_token sign((current_setting('app.postgres_jwt_claims')::JSONB || \'{"user":"guest", "scope":"api_guest"}'::JSONB)::JSON, current_setting('app.settings.jwt_secret'))::TEXT
 
 BEGIN;
+   -- [Insert test users]
+  insert into base_0_0_1.one (pk,sk,form,owner) values ('username#query@user.com',  'const#USER', '{"username":"query@user.com", "sk":"const#USER"}'::JSONB, 'queryUserKey' );
+  insert into base_0_0_1.one (pk,sk,form,owner) values ('username#query1@user.com', 'const#USER', '{"username":"query1@user.com","sk":"const#USER"}'::JSONB, 'query1UserKey' );
+  insert into base_0_0_1.one (pk,sk,form,owner) values ('username#query2@user.com', 'const#USER', '{"username":"query2@user.com","sk":"const#USER"}'::JSONB, 'query2UserKey' );
 
   SELECT plan(14);
   \set guest_token sign(current_setting('''app.postgres_jwt_claims''')::JSON,current_setting('''app.settings.jwt_secret'''))::TEXT
-  \set user_token sign((current_setting('''app.postgres_jwt_claims''')::JSONB || '''{"user":"existing@user.com", "scope":"api_user"}'''::JSONB)::JSON, current_setting('''app.settings.jwt_secret'''))::TEXT
-  \set admin_token sign((current_setting('''app.postgres_jwt_claims''')::JSONB || '''{"user":"existing@user.com", "scope":"api_admin"}'''::JSONB)::JSON, current_setting('''app.settings.jwt_secret'''))::TEXT
+  \set user_token sign((current_setting('''app.postgres_jwt_claims''')::JSONB || '''{"user":"query@user.com", "scope":"api_user","key":"queryUserKey"}'''::JSONB)::JSON, current_setting('''app.settings.jwt_secret'''))::TEXT
+  \set admin_token sign((current_setting('''app.postgres_jwt_claims''')::JSONB || '''{"user":"query@user.com", "scope":"api_admin","key":"queryUserKey"}'''::JSONB)::JSON, current_setting('''app.settings.jwt_secret'''))::TEXT
+
 
   -- function
   -- query user(NULL NULL NULL)
@@ -79,8 +84,8 @@ BEGIN;
       :user_token,
       NULL::JSON,
       '{}'::JSON
-    )::JSONB ->> 'status' = '400',
-    true::Boolean,
+    )::JSONB,
+    '{"msg": "Bad Request", "status": "400"}'::JSONB,
     'User Query  (user_token,NULL) Token query 400 0_0_1'::TEXT
   );
 
@@ -90,41 +95,44 @@ BEGIN;
       :user_token,
       '{}'::JSON,
       '{}'::JSON
-    )::JSONB ->> 'status' = '400',
-    true::Boolean,
+    )::JSONB,
+    '{"msg": "Bad Request", "status": "400"}'::JSONB,
     'User Query  (user_token,{}) 400 0_0_1'::TEXT
   );
+
   -- 8  query
   SELECT is (
     api_0_0_1.user(
       :user_token,
       '{"pk":""}'::JSON,
       '{}'::JSON
-    )::JSONB ->> 'status' = '404',
-    true::Boolean,
-    'User Query  (user_token,{username:""}) 404 0_0_1'::TEXT
+    )::JSONB ,
+    '{"msg": "Not Found", "status": "404", "criteria": {"pk": "", "sk": "*"}}'::JSONB,
+    'User Query  (user_token,{username:""}) 400 0_0_1'::TEXT
   );
 
   -- 9  query
   SELECT is (
-    api_0_0_1.user(
+    (api_0_0_1.user(
       :user_token,
-      '{"pk":"username#existing@user.com"}'::JSON,
+      '{"pk":"username#query@user.com","sk":"const#USER"}'::JSON,
       '{}'::JSON
-    )::JSONB ->> 'status' = '200',
-    true::Boolean,
+    )::JSONB - 'selection'),
+    '{"msg": "OK", "status": "200"}'::JSONB,
     'User Query  (user_token,{username:good}) 200 0_0_1'::TEXT
   );
+
   -- 10  query
   SELECT is (
-    api_0_0_1.user(
+    (api_0_0_1.user(
       :user_token,
-      '{"pk":"username#existing@user.com","sk":"const#USER"}'::JSON,
+      '{"pk":"username#query@user.com","sk":"*"}'::JSON,
       '{}'::JSON
-    )::JSONB ->> 'status' = '200',
-    true::Boolean,
+    )::JSONB - 'selection'),
+    '{"msg": "OK", "status": "200"}'::JSONB,
     'User Query  (user_token,{username:good}) 200 0_0_1'::TEXT
   );
+
   /*
   -- 11  query
   SELECT is (

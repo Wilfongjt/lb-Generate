@@ -44,21 +44,38 @@ describe('User DELETE, GET, PUT and POST Routes ', () => {
       //           set validation in route route.options.auth
       //           try to add a record
       //           delete the new record
-      // [Insert a record to delete]
+
       let username = 'delete@user.com';
+      let displayname = 'J';
       let secret = process.env.API_JWT_SECRET;
       let primaryKey = username;
-      let userKey = '1234567890987654321';
-      let scope = 'api_user'
-      let userPayload = new TestTokenPayload().user_TokenPayload(username, userKey, scope);
-      let userToken = 'Bearer ' + Jwt.token.generate(userPayload, secret);
+      let userKey = 'duckduckgoose';
+      let scope = 'api_user';
+      let password = 'a1AA!aaaa';
 
+      let userPayload = new TestTokenPayload()
+                              .user_TokenPayload(
+                                username,
+                                'guid#%1'.replace('%1',userKey),
+                                scope
+                              );
+
+      let userToken = 'Bearer ' + Jwt.token.generate(userPayload, secret);
+      // [Define a test form]
       let test_form = {
-        username: username,
-        displayname: 'J',
-        password: 'a1A!aaaa'
+        user_key: userKey,
+        scope: scope,
+        form: {
+          username: username,
+          displayname: displayname,
+          password: password
+        }
       };
 
+      //console.log('guestPayload', guestPayload);
+      //console.log('userPayload', userPayload);
+
+      // [Delete a record]
       let res = await server.inject({
           method: 'delete',
           url: '/user',
@@ -70,8 +87,10 @@ describe('User DELETE, GET, PUT and POST Routes ', () => {
             pk: username
           }
       });
-      //console.log('user delete 4');
 
+      //console.log('test res',res.result);
+
+      //console.log('user delete 4');
       //console.log('Delete User test B results: ','res',res);
 
       expect(res.statusCode).toEqual(200);
@@ -109,7 +128,8 @@ describe('User DELETE, GET, PUT and POST Routes ', () => {
       let username = 'guest@user.com';
       let key = 'guest520a5bd9-e669-41d4-b917-81212bc184a3';
       let scope ='api_guest';
-      let guestTokenPayload = new TestTokenPayload().guest_TokenPayload();
+      let guestTokenPayload = new TestTokenPayload()
+                                    .guest_TokenPayload();
       let secret = process.env.API_JWT_SECRET;
       let guestToken = 'Bearer ' + Jwt.token.generate(guestTokenPayload, secret);
 
@@ -143,7 +163,11 @@ describe('User DELETE, GET, PUT and POST Routes ', () => {
       let username = 'user@user.com';
       let key = 'user520a5bd9-e669-41d4-b917-81212bc184a3';
       let scope ='api_user';
-      let userTokenPayload = new TestTokenPayload().user_TokenPayload(username,key,scope);
+      let userTokenPayload = new TestTokenPayload()
+                                   .user_TokenPayload(
+                                     username,
+                                     `guid#${key}`,
+                                     scope);
       let secret = process.env.API_JWT_SECRET;
       let userToken = 'Bearer ' + Jwt.token.generate(userTokenPayload, secret);
 
@@ -189,7 +213,11 @@ describe('User DELETE, GET, PUT and POST Routes ', () => {
       let username = 'admin@user.com';
       let key = 'admin520a5bd9-e669-41d4-b917-81212bc184a3';
       let scope ='api_admin';
-      let adminTokenPayload = new TestTokenPayload().admin_TokenPayload(username,key,scope);
+      let adminTokenPayload = new TestTokenPayload()
+                                    .admin_TokenPayload(
+                                      username,
+                                      `guid#${key}`,
+                                      scope);
       let secret = process.env.API_JWT_SECRET;
       let adminToken = 'Bearer ' + Jwt.token.generate(adminTokenPayload, secret);
 
@@ -225,248 +253,22 @@ describe('User DELETE, GET, PUT and POST Routes ', () => {
 
   });
 
-  //  _____  _    _ _______
-  // |  __ \| |  | |__   __|
-  // | |__) | |  | |  | |
-  // |  ___/| |  | |  | |
-  // | |    | |__| |  | |
-  // |_|     \____/   |_|
-
-  it('/user : user_token can PUT user.displayname change, 200', async () => {
-      // Goal: Update application user
-      // Strategy: a user can only update their own
-      //           set validation in route route.options.auth
-      let user_name = 'update@user.com';
-      let user_name_new = 'updated@user.com';
-      let displayname_new = 'K';
-      let password_new = 'a1A!aaaa';
-      let id = 'update520a5bd9-e669-41d4-b917-81212bc184a3';
-      let scope = 'api_user';
-      let user_token_payload = new TestTokenPayload().user_TokenPayload(user_name,id,scope);
-      // set up token
-      let secret = process.env.API_JWT_SECRET;
-      let token = 'Bearer ' + Jwt.token.generate(user_token_payload, secret);
-      let payload_new = {
-        pk: `username#${user_name}`,
-        form: {
-          username: user_name_new,
-          displayname: displayname_new,
-          password: password_new
-        }
-      };
-      let payload_original = {
-          username: user_name,
-          displayname: "J",
-          password: "a1Aaaaa"
-      };
-
-      const res = await server.inject({
-          method: 'put',
-          url: '/user',
-          headers: {
-            authorization: token,
-            test: payload_original
-          },
-          payload: payload_new
-      });
-      //console.log('res', res);
-      //console.log('res.result', res.result);
-      expect(res.statusCode).toEqual(200);
-      expect(res.result.status).toEqual('200');
-      expect(res.result.updation.pk).toEqual(`username#${user_name_new}`);
-      expect(res.result.updation.form.username).toEqual(user_name_new);
-      expect(res.result.updation.form.displayname).toEqual(displayname_new);
-      expect(res.result.updation.form.password).not.toBeDefined();
-  });
-
-  // /user : user_token can PUT password, 200
-  it('/user : user_token can PUT user.password change, 200', async () => {
-      // Goal: Update application user
-      // Strategy: a user can only update their own
-      //           set validation in route route.options.auth
-      let user_name = 'update@user.com';
-      let user_name_new = 'updated@user.com';
-      let displayname_new = 'J';
-      let password_new = 'b1B!bbbb';
-      let id = 'updatea520a5bd9-e669-41d4-b917-81212bc184a3';
-      let scope = 'api_user';
-      let user_token_payload = new TestTokenPayload().user_TokenPayload(user_name,id,scope);
-      // set up token
-      let secret = process.env.API_JWT_SECRET;
-      let token = 'Bearer ' + Jwt.token.generate(user_token_payload, secret);
-      let payload_new = {
-        pk: `username#${user_name}`,
-        form: {
-          username: user_name_new,
-          displayname: displayname_new,
-          password: password_new
-        }
-      };
-      let payload_original = {
-          username: user_name,
-          displayname: "J",
-          password: "a1A!aaaa"
-      };
-
-      const res = await server.inject({
-          method: 'put',
-          url: '/user',
-          headers: {
-            authorization: token,
-            test: payload_original
-          },
-          payload: payload_new
-      });
-      //console.log('res', res);
-      //console.log('res.result', res.result);
-      expect(res.statusCode).toEqual(200);
-      expect(res.result.status).toEqual('200');
-      expect(res.result.updation.pk).toEqual(`username#${user_name_new}`);
-      expect(res.result.updation.form.username).toEqual(user_name_new);
-      expect(res.result.updation.form.displayname).toEqual(displayname_new);
-      expect(res.result.updation.form.password).not.toBeDefined();
-  });
-  // /user :  user_token can PUT primary key, 200
-  it('/user : user_token can PUT user primary key change, 200', async () => {
-      // Goal: Update application user
-      // Strategy: a user can only update their own
-      //           set validation in route route.options.auth
-      let user_name = 'update@user.com';
-      let user_name_new = 'updated1@user.com';
-      let displayname_new = 'J';
-      let password_new = 'a1Aaaaa';
-      let id = 'updatea520a5bd9-e669-41d4-b917-81212bc184a3';
-      let scope = 'api_user';
-      let user_token_payload = new TestTokenPayload().user_TokenPayload(user_name,id,scope);
-      // set up token
-      let secret = process.env.API_JWT_SECRET;
-      let token = 'Bearer ' + Jwt.token.generate(user_token_payload, secret);
-      let payload_new = {
-        pk: `username#${user_name}`,
-        form: {
-          username: user_name_new,
-          displayname: displayname_new,
-          password: password_new
-        }
-      };
-      let payload_original = {
-          username: user_name,
-          displayname: "J",
-          password: "a1A!aaaa"
-      };
-
-      const res = await server.inject({
-          method: 'put',
-          url: '/user',
-          headers: {
-            authorization: token,
-            test: payload_original
-          },
-          payload: payload_new
-      });
-      //console.log('res', res);
-      //console.log('res.result', res.result);
-      expect(res.statusCode).toEqual(200);
-      expect(res.result.status).toEqual('200');
-      expect(res.result.updation.pk).toEqual(`username#${user_name_new}`);
-      expect(res.result.updation.form.username).toEqual(user_name_new);
-      expect(res.result.updation.form.displayname).toEqual(displayname_new);
-      expect(res.result.updation.form.password).not.toBeDefined();
-  });
-
-  it('/user : user_token can PUT user displayname, password, and primary key changes all at once, 200', async () => {
-      // Goal: Update application user
-      // Strategy: a user can only update their own
-      //           set validation in route route.options.auth
-      let user_name = 'update@user.com';
-      let user_name_new = 'updated1@user.com';
-      let displayname_new = 'K';
-      let password_new = 'b1B!bbbb';
-      let id = 'updatea520a5bd9-e669-41d4-b917-81212bc184a3';
-      let scope = 'api_user';
-      let user_token_payload = new TestTokenPayload().user_TokenPayload(user_name,id,scope);
-      // set up token
-      let secret = process.env.API_JWT_SECRET;
-      let token = 'Bearer ' + Jwt.token.generate(user_token_payload, secret);
-      let payload_new = {
-        pk: `username#${user_name}`,
-        form: {
-          username: user_name_new,
-          displayname: displayname_new,
-          password: password_new
-        }
-      };
-      let payload_original = {
-          username: user_name,
-          displayname: "J",
-          password: "a1Aaaaa"
-      };
-
-      const res = await server.inject({
-          method: 'put',
-          url: '/user',
-          headers: {
-            authorization: token,
-            test: payload_original
-          },
-          payload: payload_new
-      });
-      //console.log('res', res);
-      //console.log('res.result', res.result);
-      expect(res.statusCode).toEqual(200);
-      expect(res.result.status).toEqual('200');
-      expect(res.result.updation.pk).toEqual(`username#${user_name_new}`);
-      expect(res.result.updation.form.username).toEqual(user_name_new);
-      expect(res.result.updation.form.displayname).toEqual(displayname_new);
-      expect(res.result.updation.form.password).not.toBeDefined();
-  });
-
-  //  _____   ____   _____ _______
-  // |  __ \ / __ \ / ____|__   __|
-  // | |__) | |  | | (___    | |
-  // |  ___/| |  | |\___ \   | |
-  // | |    | |__| |____) |  | |
-  // |_|     \____/|_____/   |_|
+    //  _____   ____   _____ _______
+    // |  __ \ / __ \ / ____|__   __|
+    // | |__) | |  | | (___    | |
+    // |  ___/| |  | |\___ \   | |
+    // | |    | |__| |____) |  | |
+    // |_|     \____/|_____/   |_|
 
 
 
-    it('/user : guest_token cannot POST NEW User, Hapi 403', async () => {
-        // Goal: Stop guest_token from adding a user
-        // Strategy: configure in route's options.auth.access.scope and let hapi throw the exception
-        //
-
-        let username = 'new@user.com';
-        let payload = new TestTokenPayload().guest_TokenPayload();
-        let secret = process.env.API_JWT_SECRET;
-        let token = 'Bearer ' + Jwt.token.generate(payload, secret);
-        const res = await server.inject({
-            method: 'post',
-            url: '/user',
-            headers: {
-              authorization: token,
-              rollback:true
-            },
-            payload: {
-              username: username,
-              displayname: 'J',
-              password: 'a1A!aaaa'
-            }
-        });
-        //console.log('New User test: ','res',res);
-        //console.log('New User test: ','res.result',res.result);
-
-        expect(res.statusCode).toEqual(403);
-
-    });
-
-      it('/user : user_token cannot POST NEW User, Hapi 403', async () => {
-          // Goal: Add application user
+      it('/user : guest_token cannot POST NEW User, Hapi 403', async () => {
+          // Goal: Stop guest_token from adding a user
           // Strategy: configure in route's options.auth.access.scope and let hapi throw the exception
           //
+
           let username = 'new@user.com';
-          let key='fakekey';
-          let scope='api_user';
-          let payload = new TestTokenPayload().user_TokenPayload(username, key, scope);
+          let payload = new TestTokenPayload().guest_TokenPayload();
           let secret = process.env.API_JWT_SECRET;
           let token = 'Bearer ' + Jwt.token.generate(payload, secret);
           const res = await server.inject({
@@ -489,34 +291,300 @@ describe('User DELETE, GET, PUT and POST Routes ', () => {
 
       });
 
+        it('/user : user_token cannot POST NEW User, Hapi 403', async () => {
+            // Goal: Add application user
+            // Strategy: configure in route's options.auth.access.scope and let hapi throw the exception
+            //
+            let username = 'new@user.com';
+            let key='fakekey';
+            let scope='api_user';
+            let payload = new TestTokenPayload()
+                                .user_TokenPayload(
+                                  username,
+                                  `guid#${key}`,
+                                  scope);
+            let secret = process.env.API_JWT_SECRET;
+            let token = 'Bearer ' + Jwt.token.generate(payload, secret);
+            const res = await server.inject({
+                method: 'post',
+                url: '/user',
+                headers: {
+                  authorization: token,
+                  rollback:true
+                },
+                payload: {
+                  username: username,
+                  displayname: 'J',
+                  password: 'a1A!aaaa'
+                }
+            });
+            //console.log('New User test: ','res',res);
+            //console.log('New User test: ','res.result',res.result);
 
-    it('/user : admin_token can POST NEW User, 200', async () => {
-        // Goal: Add application user
-        // Strategy: configure in route's options.auth.access.scope and let hapi throw the exception
-        //
-        let username = 'new@user.com';
-        let key='fakekey';
-        let scope='api_user';
-        let payload = new TestTokenPayload().admin_TokenPayload(username, key, scope);
-        let secret = process.env.API_JWT_SECRET;
-        let token = 'Bearer ' + Jwt.token.generate(payload, secret);
-        const res = await server.inject({
-            method: 'post',
-            url: '/user',
-            headers: {
-              authorization: token,
-              rollback:true
-            },
-            payload: {
-              username: username,
-              displayname: 'J',
-              password: 'a1A!aaaa'
-            }
+            expect(res.statusCode).toEqual(403);
+
         });
-        //console.log('New User test: ','res',res);
-        //console.log('New User test: ','res.result',res.result);
-        expect(res.statusCode).toEqual(200);
 
-    });
+
+      it('/user : admin_token can POST NEW User, 200', async () => {
+          // Goal: Add application user
+          // Strategy: configure in route's options.auth.access.scope and let hapi throw the exception
+          //
+          let username = 'new@user.com';
+          let key='fakekey';
+          let scope='api_user';
+          let payload = new TestTokenPayload()
+                              .admin_TokenPayload(
+                                username,
+                                `guid#${key}`,
+                                scope);
+          let secret = process.env.API_JWT_SECRET;
+          let token = 'Bearer ' + Jwt.token.generate(payload, secret);
+          const res = await server.inject({
+              method: 'post',
+              url: '/user',
+              headers: {
+                authorization: token,
+                rollback:true
+              },
+              payload: {
+                username: username,
+                displayname: 'J',
+                password: 'a1A!aaaa'
+              }
+          });
+          //console.log('New User test: ','res',res);
+          //console.log('New User test: ','res.result',res.result);
+          expect(res.statusCode).toEqual(200);
+
+      });
+  //  _____  _    _ _______
+  // |  __ \| |  | |__   __|
+  // | |__) | |  | |  | |
+  // |  ___/| |  | |  | |
+  // | |    | |__| |  | |
+  // |_|     \____/   |_|
+
+  it('/user : user_token can PUT user.displayname change, 200', async () => {
+      // Goal: Update application user
+      // Strategy: a user can only update their own
+      //           set validation in route route.options.auth
+      let user_name = 'update@user.com';
+      let user_name_new = 'updated@user.com';
+      let displayname_new = 'K';
+      let password_new = 'a1A!aaaa';
+      //let key = 'update520a5bd9-e669-41d4-b917-81212bc184a3';
+      let userKey = 'duckduckgoose';
+      let scope = 'api_user';
+      let user_token_payload = new TestTokenPayload()
+                                      .user_TokenPayload(
+                                        user_name,
+                                        `guid#${userKey}`,
+                                        scope);
+      // set up token
+      let secret = process.env.API_JWT_SECRET;
+      let token = 'Bearer ' + Jwt.token.generate(user_token_payload, secret);
+      let payload_new = {
+        pk: `username#${user_name}`,
+        form: {
+          username: user_name_new,
+          displayname: displayname_new,
+          password: password_new
+        }
+      };
+
+      const res = await server.inject({
+          method: 'put',
+          url: '/user',
+          headers: {
+            authorization: token,
+            test: {
+              user_key: userKey,
+              scope: scope,
+              form:{
+                username: user_name,
+                displayname: "J",
+                password: "a1Aaaaa"
+              }
+            }
+          },
+          payload: payload_new
+      });
+      //console.log('put res', res);
+      //console.log('put res.result', res.result);
+      expect(res.statusCode).toEqual(200);
+      expect(res.result.status).toEqual('200');
+      expect(res.result.updation.pk).toEqual(`username#${user_name_new}`);
+      expect(res.result.updation.form.username).toEqual(user_name_new);
+      expect(res.result.updation.form.displayname).toEqual(displayname_new);
+      expect(res.result.updation.form.password).not.toBeDefined();
+  });
+
+  // /user : user_token can PUT password, 200
+  it('/user : user_token can PUT user.password change, 200', async () => {
+      // Goal: Update application user
+      // Strategy: a user can only update their own
+      //           set validation in route route.options.auth
+      let user_name = 'update@user.com';
+      let user_name_new = 'updated@user.com';
+      let displayname_new = 'J';
+      let password_new = 'b1B!bbbb';
+      //let key = 'updatea520a5bd9-e669-41d4-b917-81212bc184a3';
+      let userKey = 'duckduckgoose';
+      let scope = 'api_user';
+      let user_token_payload = new TestTokenPayload()
+                                     .user_TokenPayload(
+                                       user_name,
+                                       `guid#${userKey}`,
+                                       scope);
+      // set up token
+      let secret = process.env.API_JWT_SECRET;
+      let token = 'Bearer ' + Jwt.token.generate(user_token_payload, secret);
+      let payload_new = {
+        pk: `username#${user_name}`,
+        form: {
+          username: user_name_new,
+          displayname: displayname_new,
+          password: password_new
+        }
+      };
+
+      const res = await server.inject({
+          method: 'put',
+          url: '/user',
+          headers: {
+            authorization: token,
+            test: {
+              user_key: userKey,
+              scope: scope,
+              form:{
+                username: user_name,
+                displayname: "J",
+                password: "a1A!aaaa"
+              }
+            }
+          },
+          payload:  payload_new
+      });
+      //console.log('res', res);
+      //console.log('res.result', res.result);
+      expect(res.statusCode).toEqual(200);
+      expect(res.result.status).toEqual('200');
+      expect(res.result.updation.pk).toEqual(`username#${user_name_new}`);
+      expect(res.result.updation.form.username).toEqual(user_name_new);
+      expect(res.result.updation.form.displayname).toEqual(displayname_new);
+      expect(res.result.updation.form.password).not.toBeDefined();
+  });
+  // /user :  user_token can PUT primary key, 200
+  it('/user : user_token can PUT user primary key change, 200', async () => {
+      // Goal: Update application user
+      // Strategy: a user can only update their own
+      //           set validation in route route.options.auth
+      let user_name = 'update@user.com';
+      let user_name_new = 'updated1@user.com';
+      let displayname_new = 'J';
+      let password_new = 'a1Aaaaa';
+      //let key = 'updatea520a5bd9-e669-41d4-b917-81212bc184a3';
+      let userKey = 'duckduckgoose';
+      let scope = 'api_user';
+      let user_token_payload = new TestTokenPayload()
+                                     .user_TokenPayload(
+                                       user_name,
+                                       `guid#${userKey}`,
+                                       scope);
+      // set up token
+      let secret = process.env.API_JWT_SECRET;
+      let token = 'Bearer ' + Jwt.token.generate(user_token_payload, secret);
+      let payload_new = {
+        pk: `username#${user_name}`,
+        form: {
+          username: user_name_new,
+          displayname: displayname_new,
+          password: password_new
+        }
+      };
+
+      const res = await server.inject({
+          method: 'put',
+          url: '/user',
+          headers: {
+            authorization: token,
+            test: {
+              user_key: userKey,
+              scope: scope,
+              form:{
+                username: user_name,
+                displayname: "J",
+                password: "a1Aaaaa"
+              }
+            }
+          },
+          payload: payload_new
+      });
+      //console.log('res', res);
+      //console.log('res.result', res.result);
+      expect(res.statusCode).toEqual(200);
+      expect(res.result.status).toEqual('200');
+      expect(res.result.updation.pk).toEqual(`username#${user_name_new}`);
+      expect(res.result.updation.form.username).toEqual(user_name_new);
+      expect(res.result.updation.form.displayname).toEqual(displayname_new);
+      expect(res.result.updation.form.password).not.toBeDefined();
+  });
+
+  it('/user : user_token can PUT user displayname, password, and primary key changes all at once, 200', async () => {
+      // Goal: Update application user
+      // Strategy: a user can only update their own
+      //           set validation in route route.options.auth
+      let user_name = 'update@user.com';
+      let user_name_new = 'updated@user.com';
+      let displayname_new = 'K';
+      let password_new = 'b1B!bbbb';
+      //let key = 'updatea520a5bd9-e669-41d4-b917-81212bc184a3';
+      let userKey = 'duckduckgoose';
+      let scope = 'api_user';
+      let user_token_payload = new TestTokenPayload()
+                                     .user_TokenPayload(
+                                       user_name,
+                                       `guid#${userKey}`,
+                                       scope);
+      // set up token
+      let secret = process.env.API_JWT_SECRET;
+      let token = 'Bearer ' + Jwt.token.generate(user_token_payload, secret);
+      let payload_new = {
+        pk: `username#${user_name}`,
+        form: {
+          username: user_name_new,
+          displayname: displayname_new,
+          password: password_new
+        }
+      };
+
+      const res = await server.inject({
+          method: 'put',
+          url: '/user',
+          headers: {
+            authorization: token,
+            test: {
+              user_key: userKey,
+              scope: scope,
+              form:{
+                username: user_name,
+                displayname: "J",
+                password: "a1Aaaaa"
+              }
+            }
+          },
+          payload: payload_new
+      });
+      //console.log('res', res);
+      //console.log('res.result', res.result);
+      expect(res.statusCode).toEqual(200);
+      expect(res.result.status).toEqual('200');
+      expect(res.result.updation.pk).toEqual(`username#${user_name_new}`);
+      expect(res.result.updation.form.username).toEqual(user_name_new);
+      expect(res.result.updation.form.displayname).toEqual(displayname_new);
+      expect(res.result.updation.form.password).not.toBeDefined();
+  });
+
 
 });

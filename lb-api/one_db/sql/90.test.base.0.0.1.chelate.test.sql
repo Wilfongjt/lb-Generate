@@ -40,6 +40,7 @@ BEGIN;
       ARRAY[ 'JSONB', 'JSONB' ],
       'Function chelate(jsonb, jsonb) exists'
   );
+  -- 2
   SELECT ok (
     base_0_0_1.chelate(
       '{"pk":"a","sk":"b","tk":"c"}'::JSONB,
@@ -66,7 +67,7 @@ BEGIN;
       ARRAY[ 'JSONB' ],
       'Function chelate(jsonb) exists'
   );
-
+  -- 2
   SELECT ok (
     (base_0_0_1.chelate(
       '{
@@ -80,7 +81,7 @@ BEGIN;
     ) ->> 'form')::JSONB  = '{"displayname":"k"}'::JSONB,
     'chelate No key changes when form missing key values and displayname changed 0_0_1'::TEXT
   );
-
+  -- 3
   -- chelate prove 'changed' is immutable 0_0_1
   SELECT ok (
     base_0_0_1.chelate(
@@ -96,6 +97,7 @@ BEGIN;
     ) ->> 'created' = '2021-02-21 20:44:47.442374',
     'chelate "changed" is immutable 0_0_1'::TEXT
   );
+  -- 4
   SELECT ok (
     base_0_0_1.chelate(
       '{
@@ -110,6 +112,7 @@ BEGIN;
     ) ->> 'updated' != '2021-02-21 20:44:47.442374',
     'chelate "updated" is mutable 0_0_1'::TEXT
   );
+  -- 5
   -- no pk change
   SELECT ok (
     base_0_0_1.chelate(
@@ -128,6 +131,7 @@ BEGIN;
 
     'chelate PK changes when form displayname changed 0_0_1'::TEXT
   );
+  -- 6
   -- no sk change
   SELECT ok (
     base_0_0_1.chelate(
@@ -146,7 +150,7 @@ BEGIN;
 
     'chelate SK changes when form displayname changed 0_0_1'::TEXT
   );
-
+  -- 7
   -- no tk change
   SELECT ok (
     base_0_0_1.chelate(
@@ -164,7 +168,7 @@ BEGIN;
     ) ->> 'tk' = 'guid#820a5bd9-e669-41d4-b917-81212bc184a3',
     'chelate TK changes when form displayname changed 0_0_1'::TEXT
   );
-
+  -- 8
   SELECT ok (
     (base_0_0_1.chelate(
       '{
@@ -182,7 +186,7 @@ BEGIN;
 
     'chelate Detect pk key changes 0_0_1'::TEXT
   );
-
+  -- 9
   SELECT ok (
     base_0_0_1.chelate(
       '{
@@ -200,7 +204,7 @@ BEGIN;
 
     'chelate Detect sk key changes 0_0_1'::TEXT
   );
-
+  -- 10
   SELECT ok (
     base_0_0_1.chelate(
       '{
@@ -218,9 +222,10 @@ BEGIN;
 
     'chelate Detect tk key changes 0_0_1'::TEXT
   );
-
+  -- 11
   SELECT ok (
     base_0_0_1.chelate(
+
       '{
           "pk":"username#update@user.com",
           "sk":"const#TEST",
@@ -235,8 +240,26 @@ BEGIN;
     ) ->> 'pk' = 'username#CHANGEupdate@user.com',
     'chelate Detect pk sk tk key changes 0_0_1'::TEXT
   );
-
-
+  -- 12
+  /*
+  updated won't delete for a proper comparison
+  SELECT is (
+    (base_0_0_1.chelate(
+      '{
+          "pk":"username#update@user.com",
+          "sk":"const#USER",
+          "tk":"guid#duckduckgoose",
+          "form":{
+            "username":"update@user.com",
+            "displayname":"K"
+          },
+          "owner":"duckduckgoose"
+       }'::JSONB - '{form,updated}'::TEXT[])
+    ),
+    '{"pk": "username#update@user.com", "sk": "const#USER", "tk": "guid#duckduckgoose", "owner": "duckduckgoose"}'::JSONB,
+    'chelate Detect pk sk tk key changes 0_0_1'::TEXT
+  );
+  */
   SELECT * FROM finish();
 
 ROLLBACK;

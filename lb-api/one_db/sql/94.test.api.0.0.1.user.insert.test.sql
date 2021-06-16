@@ -74,6 +74,7 @@ SELECT is (
     'A user_token cant add new user 0_0_1'::TEXT
   );
   -- 6
+  /*
   SELECT is (
     api_0_0_1.user(
       :admin_token,
@@ -82,6 +83,7 @@ SELECT is (
     '200',
     'An admin_token can add new user 0_0_1'::TEXT
   );
+  */
 
   SELECT * FROM finish();
 

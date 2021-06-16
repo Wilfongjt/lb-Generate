@@ -44,34 +44,40 @@ BEGIN
       SELECT array_to_json(array_agg(to_jsonb(u) #- '{form,password}' )) into _result
         FROM base_0_0_1.one u
         where pk = lower(criteria ->> 'pk');
+
     elsif criteria ? 'pk' and criteria ? 'sk' then
       -- [Query where criteria is {pk, sk}]
       SELECT array_to_json(array_agg(to_jsonb(u) #- '{form,password}' )) into _result
         FROM base_0_0_1.one u
         where pk = lower(criteria ->> 'pk')  and sk = criteria ->> 'sk';
+
     elsif criteria ? 'sk' and criteria ? 'tk' and criteria ->> 'tk' = '*' then
       -- [Query where criteria is {sk, tk:*}]
       SELECT array_to_json(array_agg(to_jsonb(u) #- '{form,password}' )) into _result
         FROM base_0_0_1.one u
         where sk = criteria ->> 'sk';
+
     elsif criteria ? 'sk' and criteria ? 'tk' then
       -- [Query where criteria is {sk, tk}]
       SELECT array_to_json(array_agg(to_jsonb(u) #- '{form,password}' )) into _result
         FROM base_0_0_1.one u
         where sk = criteria ->> 'sk' and tk = criteria ->> 'tk';
+
     elsif criteria ? 'xk' and criteria ? 'yk' and criteria ->> 'yk' = '*'  then
       -- [Query where criteria is {xk,yk:*}]
       SELECT array_to_json(array_agg(to_jsonb(u) #- '{form,password}' )) into _result
         FROM base_0_0_1.one u
         where tk = criteria ->> 'xk';
+
     elsif criteria ? 'xk' and criteria ? 'yk' then
       -- [Query where criteria is {xk, yk}]
       SELECT array_to_json(array_agg(to_jsonb(u) #- '{form,password}' )) into _result
         FROM base_0_0_1.one u
         where tk = criteria ->> 'xk' and sk = criteria ->> 'yk';
+
     else
       -- [Fail 400 when the Search Pattern is missing expected Keys]
-      return format('{"status:"400","msg":"Bad Request", "extra":"%s"}',sqlstate)::JSONB;
+      return format('{"status:"400","msg":"Bad Request", "extra":"A%s"}',sqlstate)::JSONB;
     end if;
 
   EXCEPTION
@@ -82,7 +88,7 @@ BEGIN
 
   if _result is NULL then
     -- [Fail 404 when query results are empty]
-    return format('{"status":"404","msg":"Not Found"}')::JSONB;
+    return format('{"status":"404","msg":"Not Found","criteria":%s}', criteria)::JSONB;
   end if;
 
   -- [Return {status,msg,selection}]

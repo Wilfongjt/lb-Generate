@@ -1,6 +1,6 @@
 {
     "target":{
-        "kind":"repo-source",
+        "kind":"repo-target",
         "umbrella":"01-adopt-a-drain",
         "branch":"#25.travisci.init",
         "repo":"adopt-a-drain-nuxtjs",
@@ -13,6 +13,7 @@
         "kind":"postgres",
         "name":"aad_db",
         "schema":["api_0_0_1","base_0_0_1","public"],
+        "table":{"name":"aad_db"},
         "env": [
             {"key": "POSTGRES_DB","value": "aad_db"},
             {"key": "POSTGRES_USER","value": "postgres"},

@@ -25,7 +25,7 @@ SET search_path TO base_0_0_1, base_0_0_1, public;
   --   GUID never changes
 
 
-  CREATE OR REPLACE FUNCTION base_0_0_1.update(chelate JSONB) RETURNS JSONB
+  CREATE OR REPLACE FUNCTION base_0_0_1.update(chelate JSONB,key TEXT) RETURNS JSONB
     AS $$
       --declare _chelate JSONB;
       declare old_chelate JSONB;
@@ -46,7 +46,7 @@ SET search_path TO base_0_0_1, base_0_0_1, public;
         -- [Validate Parameter (chelate)]
         if chelate is NULL then
           -- [Fail 400 when a parameter is NULL]
-          return '{"status":"400","msg":"Bad Request"}'::JSONB;
+          return '{"status":"400","msg":"Bad Request", "extra":"A"}'::JSONB;
         end if;
 
 
@@ -54,7 +54,7 @@ SET search_path TO base_0_0_1, base_0_0_1, public;
                 and chelate ? 'sk'
                 and chelate ? 'form') then
            -- [Fail 400 when pk, sk or form are missing ]
-           return '{"status":"400", "msg":"Bad Request"}'::JSONB;
+           return '{"status":"400", "msg":"Bad Request", "extra":"B"}'::JSONB;
         end if;
 
         -- detect a key change
@@ -68,11 +68,13 @@ SET search_path TO base_0_0_1, base_0_0_1, public;
               from (
                Select *
                 from base_0_0_1.one
-                where pk = lower(chelate ->> 'pk') and sk = (chelate ->> 'sk')
+                where pk = lower(chelate ->> 'pk')
+                and sk = (chelate ->> 'sk')
+                and owner = key
               ) r;
           if old_chelate is NULL then
             -- [Fail 404 when chelate is not found in table]
-            return '{"status":"404", "msg":"Not Found"}'::JSONB;
+            return format('{"status":"404", "msg":"Not Found", "extra":"C","pk":"%s","sk":"%s","key":"%s"}',lower(chelate ->> 'pk'), (chelate ->> 'sk'), key)::JSONB;
           end if;
           -- tk patch: fix up the tk when not in the chelate parameter
           if not(chelate ? 'tk') then
@@ -91,7 +93,9 @@ SET search_path TO base_0_0_1, base_0_0_1, public;
           -- Delete old
           -- [Drop existing chelate when key change detected]
           Delete from base_0_0_1.one
-            where pk = lower(chelate ->> 'pk') and sk = chelate ->> 'sk'
+            where pk = lower(chelate ->> 'pk')
+            and sk = chelate ->> 'sk'
+            and owner = key
             returning * into _result;
           -- Insert new
           -- [Insert new chelate when key change detected]
@@ -116,13 +120,14 @@ SET search_path TO base_0_0_1, base_0_0_1, public;
               form = form || (chelate ->> 'form')::JSONB,
               updated = NOW()
             where
-              pk = lower(chelate ->> 'pk') and
-              sk = (chelate ->> 'sk')
+              pk = lower(chelate ->> 'pk')
+              and sk = (chelate ->> 'sk')
+              and owner = key
               returning * into _result;
 
           if not(FOUND) then
              -- [Fail 404 when given chelate is not found]
-             return '{"status":"404", "msg":"Not Found"}'::JSONB;
+             return format('{"status":"404", "msg":"Not Found", "extra":"D", "key":"%s", "pk":"%s", "sk":"%s"}',key,chelate ->> 'pk',chelate ->> 'sk')::JSONB;
           end if;
 
         end if;
@@ -138,4 +143,4 @@ SET search_path TO base_0_0_1, base_0_0_1, public;
     END;
     $$ LANGUAGE plpgsql;
 
-grant EXECUTE on FUNCTION base_0_0_1.update(JSONB) to api_user;
+grant EXECUTE on FUNCTION base_0_0_1.update(JSONB,TEXT) to api_user;

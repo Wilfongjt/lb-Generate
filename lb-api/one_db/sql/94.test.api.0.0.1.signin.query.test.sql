@@ -15,6 +15,13 @@ SET search_path TO api_0_0_1, base_0_0_1, public;
 */
 
 BEGIN;
+--insert into base_0_0_1.one (pk,sk,form,owner) values ('username#signin@user.com', 'const#USER', '{"username":"signin@user.com","sk":"const#USER"}'::JSONB, 'signinOwner' );
+  \set guest_token public.sign(current_setting('''app.postgres_jwt_claims''')::JSON,current_setting('''app.settings.jwt_secret'''))::TEXT
+
+  select api_0_0_1.signup(
+    :guest_token,
+    '{"username":"signin@user.com","displayname":"J","password":"a1A!aaaa"}'::JSON
+  );
 
   SELECT plan(8);
   -- 1
@@ -46,7 +53,7 @@ BEGIN;
   SELECT is (
     api_0_0_1.signin(
       NULL::TEXT,
-      '{"username":"existing@user.com",
+      '{"username":"signin@user.com",
         "password":"a1A!aaaa"
        }'::JSON)::JSONB ->> 'msg',
     'Forbidden'::TEXT,
@@ -62,45 +69,34 @@ BEGIN;
     'Not Found'::TEXT,
     'signin GOOD token Bad Username Credentials 0_0_1'::TEXT
   );
-/*
-  SELECT is (
-    api_0_0_1.signin(
-      public.sign(
-        current_setting('app.postgres_jwt_claims')::JSON, current_setting('app.settings.jwt_secret'))::TEXT,
-      '{"username":"unknown@user.com","password":"a1A!aaaa"}'::JSON
-    )::JSONB ->> 'msg',
-    'Not Found'::TEXT,
-    'signin GOOD token Bad Username Credentials 0_0_1'::TEXT
-  );
-  */
+
   -- 6
   SELECT is (
     api_0_0_1.signin(
       public.sign(
         current_setting('app.postgres_jwt_claims')::JSON, current_setting('app.settings.jwt_secret'))::TEXT,
-      '{"username":"existing@user.com","password":"unknown"}'::JSON
+      '{"username":"signin@user.com","password":"unknown"}'::JSON
     )::JSONB ->> 'msg',
     'Not Found'::TEXT,
     'signin GOOD token BAD Password Credentials 0_0_1'::TEXT
   );
   -- 7
   SELECT is (
-    api_0_0_1.signin(
-      public.sign(
-        current_setting('app.postgres_jwt_claims')::JSON, current_setting('app.settings.jwt_secret'))::TEXT,
-      '{"username":"existing@user.com","password":"a1A!aaaa"}'::JSON
-    )::JSONB ->> 'msg',
-    'OK'::TEXT,
+    (api_0_0_1.signin(
+      :guest_token,
+      '{"username":"signin@user.com","password":"a1A!aaaa"}'::JSON
+    )::JSONB || '{"token":"********"}'),
+    '{"msg": "OK", "token": "********", "status": "200"}'::JSONB,
     'signin GOOD token GOOD Credentials 0_0_1'::TEXT
   );
   -- 8
   SELECT is (
-    api_0_0_1.signin(
+    (api_0_0_1.signin(
       public.sign(
         current_setting('app.postgres_jwt_claims')::JSON, current_setting('app.settings.jwt_secret'))::TEXT,
-      '{"username":"existing@user.com","password":"a1A!aaaa"}'::JSON
-    )::JSONB ? 'token',
-    true::Boolean,
+      '{"username":"signin@user.com","password":"a1A!aaaa"}'::JSON
+    )::JSONB || '{"token":"********"}'),
+    '{"msg": "OK", "token": "********", "status": "200"}'::JSONB,
     'signin GOOD token GOOD Credentials Returns TOKEN 0_0_1'::TEXT
   );
 
