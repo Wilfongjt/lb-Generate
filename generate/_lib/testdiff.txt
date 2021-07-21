@@ -1,0 +1,35 @@
+\c one_db a
+b
+SET search_path TO api_0_0_1, base_0_0_1, public;
+
+
+    -- This function was generated using api.sql.py
+
+
+CREATE OR REPLACE FUNCTION api_0_0_1.user(token TEXT,form JSON)  RETURNS JSONB AS $$
+    Declare _form JSONB; Declare result JSONB; Declare _chelate JSONB := '{}'::JSONB;Declare tmp TEXT;
+
+        BEGIN
+          -- [Function: User POST]
+
+            -- [Description: Store the original values of a user chelate]
+            -- [Parameters: token TEXT,form JSON]
+            -- [pk is <text-value> or guid#<value>
+
+          -- [Switch to api_guest Role]
+          set role api_guest;
+
+          -- [Validate token parameter]
+          result := base_0_0_1.validate_token(token) ;
+          if result is NULL then
+            -- [Fail 403 When token is invalid]
+            RESET ROLE;
+            return format('{"status":"403","msg":"Forbidden","extra":"Invalid token","user":"%s"}',CURRENT_USER)::JSONB;
+          end if;
+
+          -- [Verify token has expected scope]
+          if not(result ->> 'scope' = 'api_guest') then
+              RESET ROLE;
+              -- [Fail 401 when unexpected scope is detected]
+              return '{"status":"401","msg":"Unauthorized"}'::JSONB;
+          end if;
