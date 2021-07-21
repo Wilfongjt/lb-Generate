@@ -1,0 +1,413 @@
+{
+    "source": {
+        "kind": "repo-source",
+        "umbrella": "01-lb-api",
+        "branch": "?",
+        "project": "lyb-api",
+        "folders": [
+            {"name": "pg_db", "type": "db"},
+            {"name": "hapi-api","type": "db_api"},
+            {"name": "sql","type": "scripts"
+            }]
+    },
+    "user": {
+        "kind": "api-definition",
+        "prefix": "40",
+        "prefix-test": "94",
+        "name": "user",
+        "schema": "api_0_0_1",
+        "chelate": {
+            "pk": "username",
+            "sk": "const#USER",
+            "tk": "guid",
+            "form": {
+                "username": {
+                    "name": "username",
+                    "type": "email",
+                    "operations": "CRuD",
+                    "input": "CruD",
+                    "output": "R"
+                },
+                "password": {
+                    "name": "password",
+                    "type": "password",
+                    "operations": "Cu",
+                    "input": "Cu",
+                    "output": false
+                },
+                "displayname": {
+                    "name": "displayname",
+                    "type": "TEXT",
+                    "operations": "cru",
+                    "input": "cu",
+                    "output": "R"
+                }
+            },
+            "active": {
+                "default": true
+            },
+            "created": {
+                "default": "NOW()"
+            },
+            "updated": {
+                "default": "NOW()"
+            },
+            "owner": {
+                "default": "current_setting('request.jwt.claim.key')"
+            }
+        },
+        "methods": {
+            "POST": {
+                "headers": {
+                    "authorization": {
+                        "name": "token",
+                        "type": "TEXT"
+                    },
+                    "test": {
+                        "name": "testForm",
+                        "type": "TEXT"
+                    }
+                },
+                "parameters": {
+                    "token": {
+                        "name": "token",
+                        "type": "TEXT"
+                    },
+                    "form": {
+                        "name": "testForm",
+                        "type": "JSON"
+                    }
+                },
+                "passwordHash": true,
+                "roles": {
+                    "api_admin": {
+                        "template": ["_chelate := base_0_0_1.chelate('{\"pk\":\"[[data-chelate-pk]]\",\"sk\":\"[[data-chelate-sk]]\",\"tk\":\"*\"}'::JSONB, _form);",
+                            "-- [Stash guid for insert]",
+                            "tmp = set_config('request.jwt.claim.key', replace(_chelate ->> 'tk','guid#',''), true);"]
+                    }
+                }
+            },
+            "GET": {
+                "headers": {
+                    "authorization": {
+                        "name": "token",
+                        "type": "TEXT"
+                    },
+                    "test": {
+                        "name": "testForm",
+                        "type": "TEXT"
+                    }
+                },
+                "parameters": {
+                    "token": {
+                        "name": "token",
+                        "type": "TEXT"
+                    },
+                    "form": {
+                        "name": "form",
+                        "type": "JSON"
+                    },
+                    "options": {
+                        "name": "options",
+                        "type": "JSON"
+                    }
+                },
+                "roles": {
+                    "api_user": {
+                        "template": [
+                            "    -- no custom code"
+                        ]
+                    },
+                    "api_admin": {
+                        "template": [
+                            "    -- no custom code"
+                        ]
+                    }
+                }
+            },
+            "PUT": {
+                "headers": {
+                    "authorization": {
+                        "name": "token",
+                        "type": "TEXT"
+                    },
+                    "test": {
+                        "name": "testForm",
+                        "type": "TEXT"
+                    }
+                },
+                "parameters": {
+                    "token": {
+                        "name": "token",
+                        "type": "TEXT"
+                    },
+                    "key": {
+                        "name": "pk",
+                        "type": "TEXT"
+                    },
+                    "form": {
+                        "name": "form",
+                        "type": "JSON"
+                    }
+                },
+                "passwordHash": true,
+                "roles": {
+                    "api_user": {
+                        "template": [
+                            "if strpos(pk,'#') > 0 then",
+                            "  -- [Assume <key> is valid when # is found ... at worst, delete will end with a 404]",
+                            "  -- [Delete by pk:<key>#<value> and sk:const#USER when undefined prefix]",
+                            "  _criteria := format('{\"pk\":\"%s\", \"sk\":\"[[data-chelate-sk]]\"}',pk)::JSONB;",
+                            "else",
+                            "  -- [Wrap pk as primary key when # is not found in pk]",
+                            "  -- [Delete by pk:username#<value> and sk:const#USER when <key># is not present]",
+                            "  _criteria := format('{\"pk\":\"[[data-chelate-pk]]#%s\", \"sk\":\"[[data-chelate-sk]]\"}',pk)::JSONB;",
+                            "end if;",
+                            "-- merget pk and sk",
+                            "_chelate := _chelate || _criteria;",
+                            "-- add the provided form",
+                            "_chelate := _chelate || format('{\"form\": %s}',_form)::JSONB;"
+                        ]
+                    },
+                    "api_admin": {
+                        "template": [
+                            "if strpos(pk,'#') > 0 then",
+                            "  -- [Assume <key> is valid when # is found ... at worst, delete will end with a 404]",
+                            "  -- [Delete by pk:<key>#<value> and sk:const#USER when undefined prefix]",
+                            "  _criteria := format('{\"pk\":\"%s\", \"sk\":\"[[data-chelate-sk]]\"}',pk)::JSONB;",
+                            "else",
+                            "  -- [Wrap pk as primary key when # is not found in pk]",
+                            "  -- [Delete by pk:username#<value> and sk:const#USER when <key># is not present]",
+                            "  _criteria := format('{\"pk\":\"[[data-chelate-pk]]#%s\", \"sk\":\"[[data-chelate-sk]]\"}',pk)::JSONB;",
+                            "end if;",
+                            "-- merget pk and sk",
+                            "_chelate := _chelate || _criteria;",
+                            "-- add the provided form",
+                            "_chelate := _chelate || format('{\"form\": %s}',_form)::JSONB;"
+                        ]
+                    }
+                }
+            },
+            "DELETE": {
+                "test": {
+                    "setup_script": [
+                        "\\set primary_key '''delete@user.com'''",
+                        "   \\set pk '''username#delete@user.com'''",
+                        "   \\set sk '''const#USER'''",
+                        "   \\set tk '''guid#98765432d10'''",
+                        "   \\set form '''{\"username\":\"delete@user.com\",\"displayname\":\"J\",\"password\":\"a1A!aaaa\"}'''",
+                        "   \\set owner '''guid#9876543210'''",
+                        "   \\set guest_token sign(current_setting('''app.postgres_jwt_claims''')::JSON,current_setting('''app.settings.jwt_secret'''))::TEXT",
+                        "   \\set user_token sign((current_setting('''app.postgres_jwt_claims''')::JSONB || '''{\"user\":\"delete@user.com\", \"scope\":\"api_user\",\"key\":\"guid#9876543210\"}'''::JSONB)::JSON, current_setting('''app.settings.jwt_secret'''))::TEXT",
+                        "   \\set user_token_1 sign((current_setting('''app.postgres_jwt_claims''')::JSONB || '''{\"user\":\"delete1@user.com\", \"scope\":\"api_user\",\"key\":\"guid#abcdefghij\"}'''::JSONB)::JSON, current_setting('''app.settings.jwt_secret'''))::TEXT",
+                        "   insert into base_0_0_1.[[data-database-table-name]] (pk,sk,tk,form,owner) values (:pk, :sk, :tk, :form, :owner);"
+                    ]
+                },
+                "headers": {
+                    "authorization": {
+                        "name": "token",
+                        "type": "TEXT"
+                    },
+                    "test": {
+                        "name": "testForm",
+                        "type": "TEXT"
+                    }
+                },
+                "parameters": {
+                    "token": {
+                        "name": "token",
+                        "type": "TEXT"
+                    },
+                    "key": {
+                        "name": "pk",
+                        "type": "TEXT"
+                    }
+                },
+                "roles": {
+                    "api_user": {
+                        "template": [
+                            "    if strpos(pk,'#') > 0 then",
+                            "        -- [Assume <key> is valid when # is found ... at worst, delete will end with a 404]",
+                            "        -- [Delete by pk:<key>#<value> and sk:const#USER when undefined prefix]",
+                            "        _form := format('{\"pk\":\"%s\", \"sk\":\"[[data-chelate-sk]]\"}',pk)::JSONB;",
+                            "    else",
+                            "        -- [Wrap pk as primary key when # is not found in pk]",
+                            "        -- [Delete by pk:username#<value> and sk:const#USER when <key># is not present]",
+                            "        _form := format('{\"pk\":\"[[data-chelate-pk]]#%s\", \"sk\":\"[[data-chelate-sk]]\"}',pk)::JSONB;",
+                            "    end if;"
+                        ]
+                    },
+                    "api_admin": {
+                        "template": [
+                            "    if strpos(pk,'#') > 0 then",
+                            "        -- [Assume <key> is valid when # is found ... at worst, delete will end with a 404]",
+                            "        -- [Delete by pk:<key>#<value> and sk:const#USER when undefined prefix]",
+                            "        _form := format('{\"pk\":\"%s\", \"sk\":\"[[data-chelate-sk]]\"}',pk)::JSONB;",
+                            "    else",
+                            "        -- [Wrap pk as primary key when # is not found in pk]",
+                            "        -- [Delete by pk:username#<value> and sk:const#USER when <key># is not present]",
+                            "        _form := format('{\"pk\":\"[[data-chelate-pk]]#%s\", \"sk\":\"[[data-chelate-sk]]\"}',pk)::JSONB;",
+                            "    end if;"
+                        ]
+                    }
+                }
+            }
+        },
+        "type": "const#USER",
+        "runAsRole": "api_guest",
+        "tokenRole": "api_user"
+    },
+    "signin": {
+        "kind": "api-static",
+        "prefix": "42",
+        "prefix-test": "94",
+        "name": "signin",
+        "schema": "api_0_0_1",
+        "chelate": {
+            "pk": "username",
+            "sk": "const#USER",
+            "tk": "guid",
+            "form": {
+                "username": {
+                    "name": "username",
+                    "type": "email",
+                    "operations": "CruD",
+                    "input": "CruD",
+                    "output": "R"
+                },
+                "password": {
+                    "name": "password",
+                    "type": "password",
+                    "operations": "Cu",
+                    "input": "Cu",
+                    "output": false
+                }
+            },
+            "active": {
+                "default": true
+            },
+            "created": {
+                "default": "NOW()"
+            },
+            "updated": {
+                "default": "NOW()"
+            },
+            "owner": {
+                "default": "current_setting('request.jwt.claim.key')"
+            }
+        },
+        "methods": {
+            "GET": {
+                "headers": {
+                    "authorization": {
+                        "name": "token",
+                        "type": "TEXT"
+                    },
+                    "test": {
+                        "name": "testForm",
+                        "type": "TEXT"
+                    }
+                },
+                "parameters": {
+                    "token": {
+                        "name": "token",
+                        "type": "TEXT"
+                    },
+                    "form": {
+                        "name": "form",
+                        "type": "JSON"
+                    }
+                },
+                "roles": {
+                    "api_guest": {
+                        "template": "-- no custom code for signin"
+                    }
+                }
+            }
+        },
+        "type": "const#USER",
+        "runAsRole": "api_guest",
+        "tokenRole": "api_user",
+        "passwordHashOn": "password"
+    },
+    "signup": {
+        "kind": "api-static",
+        "prefix": "42",
+        "prefix-test": "94",
+        "name": "signup",
+        "schema": "api_0_0_1",
+        "chelate": {
+            "pk": "username",
+            "sk": "const#USER",
+            "tk": "guid",
+            "form": {
+                "username": {
+                    "name": "username",
+                    "type": "email",
+                    "operations": "CR",
+                    "input": "C",
+                    "output": "R"
+                },
+                "password": {
+                    "name": "password",
+                    "type": "password",
+                    "operations": "C",
+                    "input": "C",
+                    "output": false
+                },
+                "displayname": {
+                    "name": "displayname",
+                    "type": "TEXT",
+                    "operations": "cr",
+                    "input": "c",
+                    "output": "R"
+                }
+            },
+            "active": {
+                "default": true
+            },
+            "created": {
+                "default": "NOW()"
+            },
+            "updated": {
+                "default": "NOW()"
+            },
+            "owner": {
+                "default": "current_setting('request.jwt.claim.key')"
+            }
+        },
+        "methods": {
+            "POST": {
+                "headers": {
+                    "authorization": {
+                        "name": "token",
+                        "type": "TEXT"
+                    },
+                    "test": {
+                        "name": "testForm",
+                        "type": "TEXT"
+                    }
+                },
+                "parameters": {
+                    "token": {
+                        "name": "token",
+                        "type": "TEXT"
+                    },
+                    "form": {
+                        "name": "form",
+                        "type": "JSON"
+                    }
+                },
+                "roles": {
+                    "api_guest": {
+                        "template": "-- no custom code for signin"
+                    }
+                }
+            }
+        },
+        "type": "const#USER",
+        "runAsRole": "api_guest",
+        "tokenRole": "api_user",
+        "passwordHashOn": "password"
+    }
+}

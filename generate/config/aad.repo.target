@@ -1,17 +1,17 @@
 {
     "target":{
-            "kind":"repo-target",
-            "umbrella":"01-Generate",
-            "branch":"#01.init",
-            "project":"lb-Generate",
-            "folders": [{"name":"lb-api",   "type":"db"},
-                        {"name":"hapi-api", "type":"db_api"},
-                        {"name":"sql",      "type":"scripts"}
-                        ]
+        "kind":"repo-target",
+        "umbrella":"01-adopt-a-drain",
+        "branch":"#25.travisci.init",
+        "project":"adopt-a-drain-nuxtjs",
+        "folders": [{"name":"adopt-a-drain-nuxtjs", "type":"app"},
+                    {"name":"aad_db", "type":"db"},
+                    {"name":"aad_api","type":"db_api"},
+                    {"name":"sql","type":"scripts"}]
     },
     "database": {
         "kind":"postgres",
-        "name":"one_db",
+        "name":"aad_db",
         "schema":["api_0_0_1","base_0_0_1","public"],
         "table":{"name":"one"},
         "env": [

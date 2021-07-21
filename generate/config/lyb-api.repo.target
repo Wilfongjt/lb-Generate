@@ -1,0 +1,12 @@
+{
+    "target":{
+        "kind":"repo-target",
+        "umbrella":"01-lb-api",
+        "branch":"?",
+        "project":"lyb-api",
+        "folders": [
+           {"name":"lyb-api", "type":"hapi-app"},
+           {"name":"scripts", "type":"sh-scripts"}
+        ]
+    }
+}

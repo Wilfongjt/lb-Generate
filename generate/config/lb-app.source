@@ -1,0 +1,22 @@
+{
+    "source": {
+        "kind": "repo-source",
+        "umbrella": "01-lb-app",
+        "branch": "01_init",
+        "project": "lb-app",
+        "folders": [
+            {"name":"lb-app", "type":"nuxtjs-app"}
+        ]
+    },
+    "lb-app":{
+        "prefix": "lb_app",
+        "kind": "nuxtjs-app",
+        "name": "lb-app",
+        "heroku":{
+            "operations": "CRUD",
+            "app-name":"lb-a",
+            "host":"0.0.0.0",
+            "port":3000
+        }
+    }
+}

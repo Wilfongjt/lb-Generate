@@ -1,16 +1,16 @@
 {
     "source": {
             "kind":"repo-source",
-            "umbrella":"01-Generate",
-            "branch":"#01.init",
-            "project":"lb-Generate",
-            "folders": [{"name":"lb-api/one_db", "type":"db"},
-                    {"name":"lb-api/hapi-api","type":"db_api"},
-                    {"name":"sql","type":"scripts"}]
+            "umbrella":"01-lb-api",
+            "branch":"#10.postres",
+            "project":"lb-api",
+            "folders": [{"name":"one_db",    "type":"db"},
+                        {"name":"hapi-api",  "type":"db_api"},
+                        {"name":"sql","type":"scripts"}]
     },
     "user": {
         "kind":"api-definition",
-        "prefix":"24",
+        "prefix":"40",
         "name": "user",
         "schema": "api_0_0_1",
         "chelate": {
@@ -66,7 +66,7 @@
                 "passwordHash":true,
                 "roles": {
                     "api_admin": {
-                        "template":["_chelate := base_0_0_1.chelate('{\"pk\":\"[[data-chelate-pk]]\",\"sk\":\"[[data-chelate-sk]]\",\"tk\":\"*\"}'::JSONB, _form);",
+                        "template":["_chelate := base_0_0_1.chelate('{\"pk\":\"[[data-chelate-pk]]\",\"sk\":\"[[data-chelate-sk]]\",\"tk\":\"[[data-chelate-tk]]\"}'::JSONB, _form);",
                                     "-- [Stash guid for insert]",
                                     "tmp = set_config('request.jwt.claim.key', replace(_chelate ->> 'tk','guid#',''), true);"]
                     }
@@ -85,60 +85,12 @@
                 "roles": {
                     "api_user":{
                         "template":[
-                            "    if _form ? 'pk' and _form ? 'sk' then",
-                            "        -- [Primary query {pk,sk}]",
-                            "        _form = format('{\"pk\":\"%s\", \"sk\":\"%s\"}',_form ->> 'pk',_form ->> 'sk')::JSONB;",
-                            "    elsif _form ? 'pk' and not(_form ? 'sk') then",
-                            "        -- [Primary query {pk,sk:*}]",
-                            "        _form = format('{\"pk\":\"%s\", \"sk\":\"%s\"}',_form ->> 'pk','*')::JSONB;",
-                            "     elsif _form ? 'sk' and _form ? 'tk' then",
-                            "        -- [Secondary query {sk,tk}]",
-                            "        _form = format('{\"sk\":\"%s\", \"tk\":\"%s\"}',_form ->> 'sk',_form ->> 'tk')::JSONB;",
-                            "     elsif _form ? 'sk' and not(_form ? 'tk') then",
-                            "        -- [Secondary query {sk,tk:*}]",
-                            "        _form = format('{\"sk\":\"%s\", \"tk\":\"%s\"}',_form ->> 'sk','*')::JSONB;",
-                            "     elsif _form ? 'xk' and _form ? 'yk' then",
-                            "        -- [Teriary query {tk,sk} aka {xk, yk}]",
-                            "        _form = format('{\"xk\":\"%s\", \"yk\":\"%s\"}',_form ->> 'xk',_form ->> 'yk')::JSONB;",
-                            "     elsif _form ? 'xk' and not(_form ? 'yk') then",
-                            "        -- [Teriary query {tk} aka {xk}]",
-                            "        _form = format('{\"xk\":\"%s\", \"yk\":\"%s\"}',_form ->> 'xk','*')::JSONB;",
-                            "     elsif _form ? 'yk' and _form ? 'zk' then",
-                            "        -- [Quaternary query {sk,pk} akd {yk,zk}",
-                            "        _form = format('{\"yk\":\"%s\", \"zk\":\"%s\"}',_form ->> 'yk',_form ->> 'zk')::JSONB;",
-                            "     elsif _form ? 'yk' and not(_form ? 'zk') then",
-                            "        -- [Quaternary query {yk}",
-                            "        _form = format('{\"yk\":\"%s\", \"zk\":\"%s\"}',_form ->> 'yk','*')::JSONB;",
-                            "     end if;"
+                            "    -- no custom code"
                         ]
                     },
                     "api_admin":{
                         "template":[
-                            "    if _form ? 'pk' and _form ? 'sk' then",
-                            "        -- [Primary query {pk,sk}]",
-                            "        _form = format('{\"pk\":\"%s\", \"sk\":\"%s\"}',_form ->> 'pk',_form ->> 'sk')::JSONB;",
-                            "    elsif _form ? 'pk' and not(_form ? 'sk') then",
-                            "        -- [Primary query {pk,sk:*}]",
-                            "        _form = format('{\"pk\":\"%s\", \"sk\":\"%s\"}',_form ->> 'pk','*')::JSONB;",
-                            "     elsif _form ? 'sk' and _form ? 'tk' then",
-                            "        -- [Secondary query {sk,tk}]",
-                            "        _form = format('{\"sk\":\"%s\", \"tk\":\"%s\"}',_form ->> 'sk',_form ->> 'tk')::JSONB;",
-                            "     elsif _form ? 'sk' and not(_form ? 'tk') then",
-                            "        -- [Secondary query {sk,tk:*}]",
-                            "        _form = format('{\"sk\":\"%s\", \"tk\":\"%s\"}',_form ->> 'sk','*')::JSONB;",
-                            "     elsif _form ? 'xk' and _form ? 'yk' then",
-                            "        -- [Teriary query {tk,sk} aka {xk, yk}]",
-                            "        _form = format('{\"xk\":\"%s\", \"yk\":\"%s\"}',_form ->> 'xk',_form ->> 'yk')::JSONB;",
-                            "     elsif _form ? 'xk' and not(_form ? 'yk') then",
-                            "        -- [Teriary query {tk} aka {xk}]",
-                            "        _form = format('{\"xk\":\"%s\", \"yk\":\"%s\"}',_form ->> 'xk','*')::JSONB;",
-                            "     elsif _form ? 'yk' and _form ? 'zk' then",
-                            "        -- [Quaternary query {sk,pk} akd {yk,zk}",
-                            "        _form = format('{\"yk\":\"%s\", \"zk\":\"%s\"}',_form ->> 'yk',_form ->> 'zk')::JSONB;",
-                            "     elsif _form ? 'yk' and not(_form ? 'zk') then",
-                            "        -- [Quaternary query {yk}",
-                            "        _form = format('{\"yk\":\"%s\", \"zk\":\"%s\"}',_form ->> 'yk','*')::JSONB;",
-                            "     end if;"
+                            "    -- no custom code"
                         ]
                     }
                 }
@@ -192,6 +144,20 @@
                 }
             },
             "DELETE": {
+                "test": {
+                    "setup_script":[
+                        "\\set primary_key delete@user.com",
+                        "   \\set pk username#delete@user.com",
+                        "   \\set sk const#USER",
+                        "   \\set tk guid#98765432d10",
+                        "   \\set form '{\"username\":\"delete@user.com\",\"displayname\":\"J\",\"password\":\"a1A!aaaa\"}'",
+                        "   \\set owner guid#9876543210",
+                        "   \\set guest_token sign(current_setting('''app.postgres_jwt_claims''')::JSON,current_setting('''app.settings.jwt_secret'''))::TEXT",
+                        "   \\set user_token sign((current_setting('''app.postgres_jwt_claims''')::JSONB || '''{\"user\":\"delete@user.com\", \"scope\":\"api_user\",\"key\":\"guid#9876543210\"}'''::JSONB)::JSON, current_setting('''app.settings.jwt_secret'''))::TEXT",
+                        "   \\set user_token_1 sign((current_setting('''app.postgres_jwt_claims''')::JSONB || '''{\"user\":\"delete1@user.com\", \"scope\":\"api_user\",\"key\":\"guid#abcdefghij\"}'''::JSONB)::JSON, current_setting('''app.settings.jwt_secret'''))::TEXT",
+                        "   insert into [[data-database-name]] (pk,sk,tk,form,owner) values (:pk, :sk, :tk, :form, :owner);"
+                    ]
+                },
                 "headers": {
                     "authorization":{"name":"token","type":"TEXT"},
                     "test":{"name":"testForm","type":"TEXT"}
@@ -231,38 +197,8 @@
             }
         },
         "type": "const#USER",
-        "dep-roles": {
-            "api_guest": {
-                "description":["Guest cannot POST new user",
-                               "Guest cannot GET user(s)",
-                               "Guest cannot PUT changes into user",
-                               "Guest cannot DELETE a user"],
-                "privileges": "C",
-                "token": "Gk",
-                "execute":[]
-            },
-            "api_user": {
-                "description":["User cannot POST another user.",
-                               "User can only GET their own user info.",
-                               "User can only PUT changes into their own user info",
-                               "User can only DELETE their own user info"],
-                "privileges": "crud",
-                "token": "UK",
-                "execute":["GET","PUT","DELETE"]
-            },
-            "api_admin": {
-                "description":["Admin can POST new user",
-                               "Admin can GET user(s)",
-                               "Admin can DELETE any user",
-                               "Admin cannot PUT any changes in a user"],
-                "privileges": "r",
-                "token": "AK",
-                "execute":["POST","GET","DELETE"]
-            }
-        },
         "runAsRole": "api_guest",
-        "tokenRole": "api_user",
-        "dep-passwordHashOn": "password"
+        "tokenRole": "api_user"
     },
     "signin": {
         "kind":"api-static",
@@ -316,17 +252,7 @@
             }
         },
         "type": "const#USER",
-        "dep-roles": {
-            "api_guest": {
-                "description":["Guest cannot POST new user",
-                               "Guest cannot GET user(s)",
-                               "Guest cannot PUT changes into user",
-                               "Guest cannot DELETE a user"],
-                "privileges": "C",
-                "token": "Gk",
-                "execute":[]
-            }
-        },
+
         "runAsRole": "api_guest",
         "tokenRole": "api_user",
         "passwordHashOn": "password"
@@ -390,17 +316,7 @@
             }
         },
         "type": "const#USER",
-        "dep-roles": {
-            "api_guest": {
-                "description":["Guest cannot POST new user",
-                               "Guest cannot GET user(s)",
-                               "Guest cannot PUT changes into user",
-                               "Guest cannot DELETE a user"],
-                "privileges": "C",
-                "token": "Gk",
-                "execute":[]
-            }
-        },
+
         "runAsRole": "api_guest",
         "tokenRole": "api_user",
         "passwordHashOn": "password"

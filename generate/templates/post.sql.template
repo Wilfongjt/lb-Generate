@@ -10,10 +10,10 @@
 -- G [[data-methods-POST-requiredFieldCondition]] is data-methods-POST-requiredFieldCondition
 -- H "[[data-methods-POST-grant]]" is data-methods-POST-grant
 <script "id":"template">
+
 \c [[data-database-name]]
-
+CREATE SCHEMA if not exists [[data-schema]];
 SET search_path TO [[data-schema]], base_0_0_1, public;
-
 -- POST
 CREATE OR REPLACE FUNCTION [[data-schema]].[[data-name]](token TEXT,form JSON)  RETURNS JSONB AS $$
     Declare _form JSONB;
@@ -77,15 +77,17 @@ $$ LANGUAGE plpgsql;
 <script "id":"before-code">
 # before POST template
 def before(data):
+
     api_kinds ='api-definition api-static'
     api_kinds ='api-definition'
-
-    api_names = [n for n in data if data[n]['kind'] in api_kinds]
     METHODS = "methods"
     method = 'POST'
 
+    api_names = [n for n in data if data[n]['kind'] in api_kinds]
+
     for function_name in api_names:
-        #print('C1 ====== funcPattern', function_name)
+
+        print('C1 ====== funcPattern', function_name)
         ##########
         # inject functionpattern into api-methods-POST-funcPattern
         # (eg api-methods = {'POST': {"funcPattern":'user(TEXT,JSON))'}}
@@ -96,7 +98,7 @@ def before(data):
 
         data[function_name][METHODS][method]['funcPattern'] = '{}({})'.format(function_name, params)
 
-        #print('C2 ====== Move the Database')
+        print('C2 ====== Move the Database')
         ##########################
         # inject "database" into api-database
         ##########################
@@ -106,7 +108,7 @@ def before(data):
             return
         data[function_name]['database'] = data['database']
 
-        #print('C3 ====== Grant Execute ')
+        print('C3 ====== Grant Execute ')
         ###############################
         # inject "grant" into api-methods-POST-grant
         # add grant EXECUTE on FUNCTION <function-name>(<param-type, param-type>...) to <role>
@@ -125,7 +127,7 @@ def before(data):
             privileges = '\n'.join(privileges)
             data[function_name][METHODS][method][grant] = '{}'.format(privileges)
 
-        #print('C4 ====== Scope')
+        print('C4 ====== Scope')
         ###############################
         # inject "not('api_admin')...or" into scopeVerificationCondition
         # eg not('api_admin')
@@ -136,24 +138,32 @@ def before(data):
 
         data[function_name][METHODS][method]['scopeVerificationCondition'] = '{}'.format(privileges)
 
-        #print('C5 ====== Required')
+        print('C5 ====== Required')
         ##############################
         # inject required fields "'not(_form ? \'{}\')...or" into POST-requiredFieldCondition
         # eg POST-requiredFieldCondition': "not(_form ? 'username') or not(_form ? 'password')
         ###############################
         o2m = {'C':"POST","R":"GET","U":"PUT","D":"DELETE"}
         m2o = {"POST":"C","GET":"R","PUT":"U","DELETE":"D"}
+        #print('C5.1 ====== Required')
 
         operation =m2o[method]
+        #print('C5.2 ====== Required')
+
         required = ['not(_form ? \'{}\')'.format(r) for r in[fld[0] for fld in data[function_name]['chelate']['form'].items() if operation in fld[1]['operations']]]
+        #print('C5.3 ====== Required')
+
         required =  ' or '.join(required)
+        #print('C5.4 ====== Required')
 
         if len(required) == 0:
             required='1=0'
+        #print('C5.5 ====== Required')
 
         data[function_name][METHODS][method]['requiredFieldCondition'] = '{}'.format(required)
+        #print('C5.6 ====== Required')
 
-        #print('C6 ====== Hashing')
+        print('C6 ====== Hashing')
         ##########
         # Generate Password Hashing code
         # Turn password hashing on when passwordHashCode is <code>
@@ -166,7 +176,7 @@ def before(data):
             data[function_name][METHODS][method]['passwordHash']=False
 
         passwordHash=data[function_name][METHODS][method]['passwordHash']
-        print('passwordHash', passwordHash)
+        #print('passwordHash', passwordHash)
         if passwordHash:
             passwordHashField = [h[1]['name'] for h in data[function_name]['chelate']['form'].items()
                                                  if h[1]['type']=='password'
@@ -187,18 +197,18 @@ def before(data):
 
         data[function_name][METHODS][method]['passwordHashCode']=passwordHashCode or '-- [No Password Hashing]'
 
-        #print('C7 ====== Role Specific Code')
+        print('C7 ====== Role Specific Code')
         #################
         # inject custom role code as methods-POST-customRoleCode
         #################
 
         roleList = []
-        for r in data[function_name]['methods'][method][roles]:
-            code = ['            {}'.format(c) for c in data[function_name]['methods'][method][roles][r]['template']]
+        for r in data[function_name][METHODS][method][roles]:
+            code = ['            {}'.format(c) for c in data[function_name][METHODS][method][roles][r]['template']]
             code = '\n'.join(code)
             roleList.append('if CURRENT_USER = \'{}\' then /* custom code */\n    {}\n'.format(r,code) )
         roleList = '            el'.join(roleList) + '\n           end if;'
-        data[function_name]['methods'][method]['customRoleCode'] = roleList
+        data[function_name][METHODS][method]['customRoleCode'] = roleList
 
 
 </script>

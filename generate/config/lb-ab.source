@@ -1,0 +1,57 @@
+{
+    "source": {
+        "kind": "repo-source",
+        "umbrella": "01-lb-ab",
+        "branch": "1.init",
+        "project": "lb-ab",
+        "folders": [{"name":"lb-a", "type":"nuxtjs-app"},
+                    {"name":"lb-b", "type":"nuxtjs-app"},
+                    {"name":"lb-c","type":"nuxtjs-app"},
+                    {"name":"hapi-api","type":"hapi-api"}
+        ]
+    },
+    "lb-a":{
+        "prefix": "lb_a",
+        "kind": "nuxtjs-app",
+        "name": "lb-a",
+        "heroku":{
+            "operations": "CRUD",
+            "app-name":"lb-a",
+            "host":"0.0.0.0",
+            "port":3000
+        }
+    },
+    "lb-hapi":{
+        "prefix": "lb-hapi",
+        "kind": "hapi-api",
+        "name": "lb-hapi",
+        "heroku":{
+            "operations": "CRUD",
+            "app-name":"lb-hapi",
+            "host":"0.0.0.0",
+            "port":3001
+        }
+    },
+    "lb-b":{
+        "prefix": "lb_b",
+        "kind": "nuxtjs-app",
+        "name": "lb-b",
+        "dep-heroku":{
+            "operations": "CRUD",
+            "app-name":"lb-b",
+            "host":"0.0.0.0",
+            "port":3001
+        }
+    },
+    "hapi-api":{
+        "prefix": "hapi_api",
+        "kind": "hapi-api",
+        "name": "hapi-api",
+        "dep-heroku":{
+            "operations": "CRUD",
+            "app-name":"lb-hapi-api",
+            "host":"0.0.0.0",
+            "port":3001
+        }
+    }
+}

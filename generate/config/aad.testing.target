@@ -1,0 +1,25 @@
+{
+    "target":{
+            "kind":"local-target",
+            "umbrella":"00-Testing",
+            "project":"adopt-a-drain-nuxtjs",
+            "folders": [{"name":"aad_db",     "type":"db"},
+                        {"name":"sql",    "type":"scripts"},
+                        {"name":"aad_api", "type":"db_api"}]
+    },
+    "database": {
+        "kind":"postgres",
+        "name":"aad_db",
+        "schema":["api_0_0_1","base_0_0_1","public"],
+        "table":{"name":"one"},
+        "context": "aad_db",
+        "env": [
+            {"key": "POSTGRES_DB","value": "POSTGRES_DB"},
+            {"key": "POSTGRES_USER","value": "POSTGRES_USER"},
+            {"key": "POSTGRES_PASSWORD","value": "POSTGRES_PASSWORD"},
+            {"key": "POSTGRES_JWT_SECRET","value": "POSTGRES_JWT_SECRET"},
+            {"key": "POSTGRES_API_PASSWORD","value": "POSTGRES_API_PASSWORD"},
+            {"key": "POSTGRES_JWT_CLAIMS","value": "POSTGRES_JWT_CLAIMS"}
+        ]
+    }
+}

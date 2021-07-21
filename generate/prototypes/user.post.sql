@@ -52,7 +52,7 @@ BEGIN
               tmp = set_config('request.jwt.claim.key', replace(_chelate ->> 'tk','guid#',''), true);
           end if;
           -- [D. Insert Chelate]
-          result := base_0_0_1.insert(_chelate);
+          result := base_0_0_1.insert(_chelate, _chelate ->> 'key');
           RESET ROLE;
           -- [Return {status,msg,insertion}]
           return result;

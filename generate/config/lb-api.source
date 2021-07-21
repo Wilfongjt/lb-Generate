@@ -1,0 +1,23 @@
+{
+    "source": {
+        "kind": "repo-source",
+        "umbrella": "01-lb-api",
+        "branch": "01_init_API",
+        "project": "lb-api",
+        "folders": [
+            {"name":"lb-api", "type":"hapi-app"},
+            {"name":"scripts", "type":"sh-scripts"}
+        ]
+    },
+    "lb-api":{
+        "prefix": "lb-api",
+        "kind": "hapi-app",
+        "name": "lb-api",
+        "heroku":{
+            "operations": "CRUD",
+            "app-name":"lb-api",
+            "host":"0.0.0.0",
+            "port":5555
+        }
+    }
+}

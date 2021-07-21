@@ -1,0 +1,148 @@
+-- this template is designed to facilitate all the common code accross api DELETE calls
+-- pair template up with a custom class to add user specific code ... current-user-code
+-- an api definition is also required to provide customization
+-- A "[[data-schema]]" is api_0_0_1 {user:schema}
+-- B "[[data-name]]" is data-name
+-- C "[[data-methods-DELETE-parameters-token-name]]" is data-methods-DELETE-parameters-token-name
+-- D "[[data-methods-DELETE-parameters-form-name]]" is form data-methods-DELETE-parameters-form-name
+-- E "[[data-methods-DELETE-parameters-form-type]]" is data-methods-DELETE-parameters-form-type
+-- F ([[data-DELETE-scope-verification-condition]]) is data-DELETE-scope-verification-condition
+-- G ([[data-DELETE-form-required-field-condition]]) is data-DELETE-form-required-field-condition
+-- H "[[data-methods-DELETE-grant]]" is data-methods-DELETE-grant
+<script "id":"template">
+\c [[data-database-name]]
+-- Delete
+-------------------
+-- [[data-name]]
+------------------
+-- Variables
+-- primary_key
+-- pk
+-- sk
+-- tk
+-- form
+-- owner
+-- guest_token
+-- user_token
+-- user_token_1
+
+BEGIN;
+  -- [Insert deletable record]
+  [[data-methods-DELETE-test-setup_script]]
+
+  SELECT plan(1);
+
+  -- [1 Delete [[data-name]], Function]
+  SELECT has_function(
+      '[[data-schema]]',
+      '[[data-name]]',
+      ARRAY[ 'TEXT', 'TEXT'],
+      'Function [[data-schema]].[[data-name]] Delete (text, text) exists'
+  );
+
+-- [2  try to Delete [[data-name]] with Null token and Null pk]
+  SELECT is (
+    [[data-schema]].[[data-name]](
+      NULL::TEXT,
+      NULL::TEXT
+    )::JSONB,
+    '{"msg": "Forbidden", "[[data-name]]": "postgres", "extra": "Invalid token", "status": "403"}'::JSONB,
+    'A NULL token cant Delete a [[data-name]] 0_0_1'::TEXT
+  );
+
+  --3  try Delete [[data-name]] with wrong token and null pk
+    SELECT is (
+      [[data-schema]].[[data-name]](
+        :guest_token,
+        NULL::TEXT
+      )::JSONB,
+      '{"msg": "Unauthorized", "status": "401"}'::JSONB,
+      'A guest_token cant Delete a [[data-name]] 0_0_1'::TEXT
+    );
+
+    --4  try to Delete [[data-name]] with null pk
+    SELECT is (
+      [[data-schema]].[[data-name]](
+        :user_token,
+        NULL::TEXT
+      )::JSONB,
+      '{"msg": "Bad Request", "status": "400"}'::JSONB,
+      'A user_token cant Delete a [[data-name]] 0_0_1'::TEXT
+    );
+
+    --5  try to Delete [[data-name]] with no pk value
+    SELECT is (
+      [[data-schema]].[[data-name]](
+        :user_token,
+        ''::TEXT
+      )::JSONB - '{owner,criteria}'::text[],
+      '{"msg": "Not Found", "status": "404"}'::JSONB,
+      'A user_token cant Delete a blank [[data-name]] 0_0_1'::TEXT
+    );
+    --6  try to Delete [[data-name]] with wrong token
+    SELECT is (
+      [[data-schema]].[[data-name]](
+        :user_token_1,
+        :primary_key
+      )::JSONB - '{owner,criteria}'::text[],
+      '{"msg": "Not Found", "status": "404"}'::JSONB,
+      'User Delete [[data-name]] 404 0_0_1'::TEXT
+    );
+ -- [7 Delete [[data-name]], OK]
+  SELECT is (
+      ([[data-schema]].[[data-name]](
+        :user_token,
+        :primary_key
+      )::JSONB - '{criteria,deletion}'::text[]),
+      '{"msg": "OK", "status": "200"}'::JSONB,
+      '[[data-name]] Delete 200 [[data-schema]]'::TEXT
+  );
+ -- [8  Delete [[data-name]], Double Dip]
+    SELECT is (
+      [[data-schema]].[[data-name]](
+        :user_token,
+        :primary_key
+      )::JSONB ->> 'status',
+      '404',
+      '[[data-name]] Delete 404 0_0_1'::TEXT
+    );
+
+  SELECT * FROM finish();
+
+ROLLBACK;
+
+
+</script>
+
+<script "id":"before-code">
+# before DELETE template
+def before(data):
+    api_kinds ='api-definition api-static'
+    api_kinds ='api-definition'
+
+    api_names = [n for n in data if data[n]['kind'] in api_kinds]
+    METHODS = "methods"
+    method = 'DELETE'
+
+    for function_name in api_names:
+
+        # print('    - C2 ====== Move the Database')
+        #print('function_name',function_name)
+        ##########################
+        # inject "database" into api-database
+        ##########################
+        if 'database' not in data:
+            print('ERROR Database key not found.')
+            data[function_name]['database'] = {}
+            return
+        data[function_name]['database'] = data['database']
+
+
+
+</script>
+<script "id":"after-code">
+
+def after(def_name):
+    print('DELETE after code TBD')
+
+</script>

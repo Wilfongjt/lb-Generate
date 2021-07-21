@@ -11,9 +11,8 @@
 -- H "[[data-methods-PUT-grant]]" is data-methods-PUT-grant
 <script "id":"template">
 \c [[data-database-name]]
-
+CREATE SCHEMA if not exists [[data-schema]];
 SET search_path TO [[data-schema]], base_0_0_1, public;
-
 -- PUT
 
 CREATE OR REPLACE FUNCTION [[data-schema]].[[data-name]](token TEXT,pk TEXT,form JSON) RETURNS JSONB AS $$
@@ -86,11 +85,13 @@ def before(data):
     api_kinds ='api-definition api-static'
     api_kinds ='api-definition'
 
-    api_names = [n for n in data if data[n]['kind'] in api_kinds]
     METHODS = "methods"
     method = 'PUT'
 
+    api_names = [n for n in data if data[n]['kind'] in api_kinds]
+
     for function_name in api_names:
+
         #print('C1 ====== funcPattern', function_name)
         ##########
         # inject functionpattern into api-methods-PUT-funcPattern
@@ -158,8 +159,8 @@ def before(data):
             required='1=0'
 
         data[function_name][METHODS][method]['requiredFieldCondition'] = '{}'.format(required)
-        print('X operation',operation)
-        print('X requiredFieldCondition',data[function_name][METHODS][method]['requiredFieldCondition'])
+        #print('X operation',operation)
+        #print('X requiredFieldCondition',data[function_name][METHODS][method]['requiredFieldCondition'])
 
         #print('C6 ====== Hashing')
         ##########
@@ -174,7 +175,7 @@ def before(data):
             data[function_name][METHODS][method]['passwordHash']=False
 
         passwordHash=data[function_name][METHODS][method]['passwordHash']
-        print('passwordHash', passwordHash)
+        #print('passwordHash', passwordHash)
         if passwordHash:
             passwordHashField = [h[1]['name'] for h in data[function_name]['chelate']['form'].items()
                                                  if h[1]['type']=='password'
