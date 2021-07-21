@@ -3,7 +3,7 @@
             "kind":"repo-source",
             "umbrella":"01-Generate",
             "branch":"#01.init",
-            "repo":"lb-Generate",
+            "project":"lb-Generate",
             "folders": [{"name":"lb-api/one_db", "type":"db"},
                     {"name":"lb-api/hapi-api","type":"db_api"},
                     {"name":"sql","type":"scripts"}]

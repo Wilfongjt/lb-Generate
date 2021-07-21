@@ -1,17 +1,15 @@
 {
     "target":{
-            "kind":"repo-target",
-            "umbrella":"01-Generate",
-            "branch":"#01.init",
-            "project":"lb-Generate",
-            "folders": [{"name":"lb-api",   "type":"db"},
-                        {"name":"hapi-api", "type":"db_api"},
-                        {"name":"sql",      "type":"scripts"}
-                        ]
+            "kind":"local-target",
+            "umbrella":"00-Testing",
+            "project":"example",
+            "folders": [{"name":"test_db",     "type":"db"},
+                        {"name":"sql",    "type":"scripts"},
+                        {"name":"db_api", "type":"db_api"}]
     },
     "database": {
         "kind":"postgres",
-        "name":"one_db",
+        "name":"test_db",
         "schema":["api_0_0_1","base_0_0_1","public"],
         "table":{"name":"one"},
         "env": [

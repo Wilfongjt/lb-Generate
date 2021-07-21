@@ -11,11 +11,12 @@
 -- H "[[data-methods-DELETE-grant]]" is data-methods-DELETE-grant
 <script "id":"template">
 \c [[data-database-name]]
-CREATE SCHEMA if not exists [[data-schema]];
-SET search_path TO [[data-schema]], base_0_0_1, public;
+--CREATE SCHEMA if not exists [[data-schema]];
+--SET search_path TO [[data-schema]], base_0_0_1, public;
 
--- DELETE
-
+-- Grant Execute
+grant EXECUTE on FUNCTION api_0_0_1.time() to api_guest;
+/*
 CREATE OR REPLACE FUNCTION [[data-schema]].[[data-name]](token TEXT,pk TEXT) RETURNS JSONB AS $$
     Declare result JSONB;
     Declare _form JSONB := '{}'::JSONB;
@@ -60,8 +61,10 @@ BEGIN
           return result;
 END;
 $$ LANGUAGE plpgsql;
+*/
 -- DELETE
 -- e.g., grant EXECUTE on FUNCTION
+
 [[data-methods-DELETE-grant]]
 </script>
 
@@ -76,12 +79,6 @@ def before(data):
     api_names = [n for n in data if data[n]['kind'] in api_kinds]
 
     for function_name in api_names:
-
-        #######
-        # Guess Branch Name
-        #######
-
-
         #print('    - C1 ====== funcPattern', function_name)
         ##########
         # inject functionpattern into afpi-methods-DELETE-funcPattern

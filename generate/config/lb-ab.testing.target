@@ -1,0 +1,12 @@
+{
+    "target":{
+        "kind":"local-target",
+        "umbrella":"00-Testing",
+        "branch":".",
+        "project":"lb-ab",
+        "folders": [{"name":"lb-a", "type":"nuxtjs-app"},
+                    {"name":"lb-b", "type":"nuxtjs-app"},
+                    {"name":"lb-c","type":"nuxtjs-app"},
+                    {"name":"hapi-api","type":"hapi-api"}]
+    }
+}

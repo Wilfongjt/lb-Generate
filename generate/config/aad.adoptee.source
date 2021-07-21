@@ -1,0 +1,180 @@
+{
+    "source": {
+            "kind":"repo-source",
+            "umbrella":"01-lb-api",
+            "branch":"#10.postres",
+            "project":"lb-api",
+            "folders": [{"name":"one_db",    "type":"db"},
+                        {"name":"hapi-api",  "type":"db_api"},
+                        {"name":"sql","type":"scripts"}]
+    },
+    "adoptee":{
+        "kind":"api-definition",
+        "prefix":"40",
+        "name": "adoptee",
+        "schema": "api_0_0_1",
+        "type": "const#ADOPTEE",
+        "chelate": {
+            "pk": "asset_id",
+            "sk": "const#ADOPTEE",
+            "tk": "asset_user",
+            "form": {
+                "asset_id": {
+                    "name":"asset_id",
+                    "type": "TEXT",
+                    "operations":"CRuD"
+                },
+                "user_tk": {
+                    "name":"user_tk",
+                    "type": "TEXT",
+                    "operations":"Cu"
+                },
+                "asset_user": {
+                    "description":"concatination of asset_id and user_tk",
+                    "name":"asset_user",
+                    "type": "TEXT",
+                    "operations":"Cu"
+                },
+                "dr_name": {
+                    "name":"dr_name",
+                    "type": "TEXT",
+                    "operations":"cru"
+                },
+                "dr_jurisdiction": {
+                    "name":"dr_jurisdiction",
+                    "type": "TEXT",
+                    "operations":"cru"
+                },
+                "dr_discharge": {
+                    "name":"dr_discharge",
+                    "type": "TEXT",
+                    "operations":"cru"
+                },
+                "dr_system_use_code": {
+                    "name":"dr_system_use_code",
+                    "type": "TEXT",
+                    "operations":"cru"
+                },"dr_lat": {
+                    "name":"dr_lat",
+                    "type": "LATITUDE",
+                    "operations":"cru"
+                },
+                "dr_lon": {
+                    "name":"lon",
+                    "type": "LONGITUDE",
+                    "operations":"cru"
+                }
+            },
+            "active": {
+                "default": true
+            },
+            "created": {
+                "default": "NOW()"
+            },
+            "updated": {
+                "default": "NOW()"
+            },
+            "owner": {
+                "default": "current_setting('request.jwt.claim.key')"
+            }
+        },
+        "methods": {
+            "POST": {
+                "headers": {
+                    "authorization":{"name":"token","type":"TEXT"},
+                    "test":{"name":"testForm","type":"TEXT"}
+                },
+                "parameters": {
+                    "token":{"name":"token","type":"TEXT"},
+                    "form":{"name":"testForm","type":"JSON"}
+                },
+                "roles": {
+                    "api_user": {
+                        "template":["_chelate := base_0_0_1.chelate('{\"pk\":\"[[data-chelate-pk]]\",\"sk\":\"[[data-chelate-sk]]\",\"tk\":\"[[data-chelate-tk]]\"}'::JSONB, _form);",
+                                    "-- [Stash guid for insert]",
+                                    "-- tmp = set_config('request.jwt.claim.key', replace(_chelate ->> 'tk','guid#',''), true);"]
+                    }
+                }
+            },
+            "GET": {
+                "headers": {
+                   "authorization":{"name":"token","type":"TEXT"},
+                    "test":{"name":"testForm","type":"TEXT"}
+                },
+                "parameters": {
+                    "token":{"name":"token","type":"TEXT"},
+                    "form":{"name":"form","type":"JSON"},
+                    "options":{"name":"options","type":"JSON"}
+                },
+                "roles": {
+                    "api_user":{
+                        "template":[
+                            "    -- no custom code"
+                        ]
+                    }
+                }
+            },
+            "PUT": {
+                "headers": {
+                    "authorization":{"name":"token","type":"TEXT"},
+                    "test":{"name":"testForm","type":"TEXT"}
+                },
+                "parameters": {
+                    "token":{"name":"token","type":"TEXT"},
+                    "key": {"name":"pk","type":"TEXT"},
+                    "form":{"name":"form","type":"JSON"}
+                },
+                "passwordHash":false,
+                "roles": {
+                    "api_user":{
+                        "template":[
+                            "if strpos(pk,'#') > 0 then",
+                            "  -- [Assume <key> is valid when # is found ... at worst, delete will end with a 404]",
+                            "  -- [Delete by pk:<key>#<value> and sk:const#USER when undefined prefix]",
+                            "  _criteria := format('{\"pk\":\"%s\", \"sk\":\"[[data-chelate-sk]]\"}',pk)::JSONB;",
+                            "else",
+                            "  -- [Wrap pk as primary key when # is not found in pk]",
+                            "  -- [Delete by pk:username#<value> and sk:const#USER when <key># is not present]",
+                            "  _criteria := format('{\"pk\":\"[[data-chelate-pk]]#%s\", \"sk\":\"[[data-chelate-sk]]\"}',pk)::JSONB;",
+                            "end if;",
+                            "-- merget pk and sk",
+                            "_chelate := _chelate || _criteria;",
+                            "-- add the provided form",
+                            "_chelate := _chelate || format('{\"form\": %s}',_form)::JSONB;"
+                        ]
+                    }
+                }
+            },
+            "DELETE": {
+                "test_record":{
+                    "0": "insert into base_0_0_1.one (pk,sk,tk,form,owner) values ('asset_id#JJJ_1234567','const#ADOPTEE','asset_user#JJJ_1234567+9876543210','{\"asset_id\":\"JJJ_1234567\", \"user_tk\":\"9876543210\", \"asset_user\":\"JJJ_1234567+9876543210\", \"name\":\"Drain name\", \"jurisdiction\":\"Grand Haven\", \"discharge\":\"Grand River\", \"system_use_code\":\"Storm Drain\", \"lat\":42.0, \"lon\": -84.00}'::JSONB,'9876543210' );"
+                },
+                "headers": {
+                    "authorization":{"name":"token","type":"TEXT"},
+                    "test":{"name":"testForm","type":"TEXT"}
+                },
+                "parameters": {
+                    "token":{"name":"token","type":"TEXT"},
+                    "key": {"name":"pk","type":"TEXT"}
+                },
+                 "roles": {
+                    "api_user":{
+                        "template":[
+                            "    if strpos(pk,'#') > 0 then",
+                            "        -- [Assume <key> is valid when # is found ... at worst, delete will end with a 404]",
+                            "        -- [Delete by pk:<key>#<value> and sk:const#ADOPTEE when undefined prefix]",
+                            "        _form := format('{\"pk\":\"%s\", \"sk\":\"[[data-chelate-sk]]\"}',pk)::JSONB;",
+                            "    else",
+                            "        -- [Wrap pk as primary key when # is not found in pk]",
+                            "        -- [Delete by pk:username#<value> and sk:const#ADOPTEE when <key># is not present]",
+                            "        _form := format('{\"pk\":\"[[data-chelate-pk]]#%s\", \"sk\":\"[[data-chelate-sk]]\"}',pk)::JSONB;",
+                            "    end if;"
+                        ]
+                    }
+                }
+            }
+        },
+        "runAsRole": "api_guest",
+        "tokenRole": "api_user"
+    }
+}

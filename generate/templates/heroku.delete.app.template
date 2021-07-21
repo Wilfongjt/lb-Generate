@@ -1,0 +1,45 @@
+<script "id":"template">
+#cd [[data-target-branch]]/
+#cd [[data-target-project]]/
+# assume we are in subfolder of project repo
+cd ..
+#---------------
+# [# Remove a Specific Heroku Application]
+# [* Login to Heroku from script]
+heroku login
+#---------------
+heroku apps
+git remote -v
+#---------------
+#heroku apps:destroy --app "${app}-staging" --confirm "${app}-staging"
+
+  echo "del [[app-heroku-app-name]]"
+  # [* Destroy the existing app]
+  heroku apps:destroy --app "[[app-heroku-app-name]]" --confirm "[[app-heroku-app-name]]"
+
+  echo "del [[app-heroku-app-name]]"
+  # [* Remove the Git repo]
+  git remote rm "[[app-heroku-app-name]]"
+
+  echo "del [[app-heroku-app-name]]-staging"
+  # [* Remove the Git Staging repo]
+  #git remote rm "[[app-heroku-app-name]]-staging"
+
+
+
+#---------------
+# [* Echo the current list of apps]
+# [* Echo the current list of heroku apps]
+heroku apps
+git remote -v
+
+# [Open heroku browser]
+open -a safari "https://dashboard.heroku.com/apps"
+
+</script>
+<script "id":"after-code">
+
+def after(def_name):
+    print('SCRIPT after code TBD')
+
+</script>

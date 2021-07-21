@@ -1,0 +1,11 @@
+{
+    "target": {
+        "kind": "repo-source",
+        "umbrella": "01-lb-app",
+        "branch": "01_init",
+        "project": "lb-app",
+        "folders": [
+            {"name":"lb-app", "type":"nuxtjs-app"}
+        ]
+    },
+}
